@@ -1,0 +1,43 @@
+name: Exportar QuickSight para Dash_fedex
+
+on:
+  schedule:
+    # 08:00 e 18:00 no horário de Brasília (UTC-3)
+    # O GitHub usa UTC, por isso 11 e 21.
+    - cron: '0 11 * * 1-5'
+    - cron: '0 21 * * 1-5'
+  workflow_dispatch:        # permite rodar manualmente pelo botão
+
+jobs:
+  exportar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Instalar dependências
+        run: |
+          pip install -r requirements.txt
+          playwright install --with-deps chromium
+
+      - name: Exportar e atualizar planilha
+        env:
+          QS_ACCOUNT: advanceanalytics
+          QS_USER: ${{ secrets.QS_USER }}
+          QS_PASSWORD: ${{ secrets.QS_PASSWORD }}
+          GOOGLE_CREDS_JSON: ${{ secrets.GOOGLE_CREDS_JSON }}
+        run: python scripts/quicksight_export.py
+
+      # Se falhar, guarda screenshot e HTML pra descobrir o que mudou
+      - name: Guardar evidências em caso de falha
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: debug-${{ github.run_number }}
+          path: debug/
+          retention-days: 14

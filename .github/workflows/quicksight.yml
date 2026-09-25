@@ -1,12 +1,12 @@
 name: Exportar QuickSight para Dash_fedex
 
 on:
-  schedule:
-    # 08:00 e 18:00 no horário de Brasília (UTC-3)
-    # O GitHub usa UTC, por isso 11 e 21.
-    - cron: '0 11 * * 1-5'
-    - cron: '0 21 * * 1-5'
-  workflow_dispatch:        # permite rodar manualmente pelo botão
+  # O agendamento é feito por fora, no cron-job.org, que chama a API do
+  # GitHub nos horários (08h e 18h, dias úteis). Por isso não há bloco
+  # "schedule" aqui — ter os dois faria o workflow rodar em duplicidade.
+  # O workflow_dispatch é o que permite tanto o disparo externo quanto
+  # o botão "Run workflow" na aba Actions.
+  workflow_dispatch:
 
 jobs:
   exportar:

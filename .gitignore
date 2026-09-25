@@ -1,0 +1,11 @@
+saida/
+debug/
+*.json
+!package.json
+.env
+credenciais*.json
+service-account*.json
+__pycache__/
+*.pyc
+venv/
+.venv/

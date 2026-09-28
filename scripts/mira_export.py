@@ -76,13 +76,19 @@ def fazer_login(page, usuario, senha):
     page.goto(f"{MIRA_BASE}/login", wait_until="domcontentloaded",
               timeout=TIMEOUT_PADRAO_MS)
 
+    # O campo de e-mail não tem atributo type — só name="email" e o
+    # placeholder. Por isso a busca é pelo name, que os dois campos têm.
     log("Preenchendo e-mail")
-    campo_email = page.locator("input[type='email'], input[type='text']").first
+    campo_email = page.locator(
+        "input[name='email'], input[placeholder*='mail' i]"
+    ).first
     campo_email.wait_for(state="visible", timeout=TIMEOUT_PADRAO_MS)
     campo_email.fill(usuario)
 
     log("Preenchendo senha")
-    campo_senha = page.locator("input[type='password']").first
+    campo_senha = page.locator(
+        "input[name='password'], input[type='password']"
+    ).first
     campo_senha.wait_for(state="visible", timeout=TIMEOUT_PADRAO_MS)
     campo_senha.fill(senha)
 

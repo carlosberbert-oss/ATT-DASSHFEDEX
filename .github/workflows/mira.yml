@@ -1,0 +1,38 @@
+name: Baixar relatório Mira
+
+on:
+  # Disparado por fora (cron-job.org) às 08:10, no mesmo esquema do
+  # QuickSight. O workflow_dispatch é o que permite esse disparo.
+  workflow_dispatch:
+
+jobs:
+  exportar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Instalar dependências
+        run: |
+          pip install -r requirements.txt
+          playwright install --with-deps chromium
+
+      - name: Baixar relatório e atualizar planilha
+        env:
+          MIRA_USER: ${{ secrets.MIRA_USER }}
+          MIRA_PASSWORD: ${{ secrets.MIRA_PASSWORD }}
+          GOOGLE_CREDS_JSON: ${{ secrets.GOOGLE_CREDS_JSON }}
+        run: python scripts/mira_export.py
+
+      - name: Guardar evidências em caso de falha
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: debug-mira-${{ github.run_number }}
+          path: debug/
+          retention-days: 14

@@ -78,20 +78,42 @@ def fazer_login(page, usuario, senha):
 
     # O campo de e-mail não tem atributo type — só name="email" e o
     # placeholder. Por isso a busca é pelo name, que os dois campos têm.
+    #
+    # E o formulário é React (Next.js): o fill() às vezes preenche
+    # visualmente sem disparar os eventos que o componente escuta, e o
+    # React continua achando que o campo está vazio. Por isso digitamos
+    # caractere a caractere com type(), que gera os eventos de teclado.
     log("Preenchendo e-mail")
     campo_email = page.locator(
         "input[name='email'], input[placeholder*='mail' i]"
     ).first
     campo_email.wait_for(state="visible", timeout=TIMEOUT_PADRAO_MS)
-    campo_email.fill(usuario)
+    campo_email.click()
+    campo_email.type(usuario, delay=30)
 
     log("Preenchendo senha")
     campo_senha = page.locator(
         "input[name='password'], input[type='password']"
     ).first
     campo_senha.wait_for(state="visible", timeout=TIMEOUT_PADRAO_MS)
-    campo_senha.fill(senha)
+    campo_senha.click()
+    campo_senha.type(senha, delay=30)
 
+    # Confere que os valores entraram de verdade antes de submeter —
+    # se algo falhou, o erro aqui é bem mais claro que a tela de
+    # validação do site.
+    valor_email = campo_email.input_value()
+    valor_senha = campo_senha.input_value()
+
+    if not valor_email or not valor_senha:
+        salvar_debug(page, "campos_vazios")
+        raise RuntimeError(
+            f"Os campos não foram preenchidos (e-mail: {len(valor_email)} "
+            f"caractere(s), senha: {len(valor_senha)}). "
+            "Confira se MIRA_USER e MIRA_PASSWORD estão configurados."
+        )
+
+    log(f"Campos preenchidos ({len(valor_email)} / {len(valor_senha)} caracteres)")
     page.get_by_role("button", name="Entrar").first.click()
 
     log("Aguardando entrar")
@@ -356,6 +378,9 @@ def main():
 
     if not usuario or not senha:
         sys.exit("Faltam as variáveis MIRA_USER e MIRA_PASSWORD")
+
+    log(f"Credenciais carregadas — usuário: {usuario[:3]}***{usuario[-8:]}, "
+        f"senha: {len(senha)} caractere(s)")
     if not args.so_baixar and not creds_json:
         sys.exit("Falta a variável GOOGLE_CREDS_JSON")
 

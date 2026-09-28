@@ -249,13 +249,83 @@ def escrever_no_sheets(caminho_csv, sheet_id, creds_json):
     if not linhas:
         raise RuntimeError("CSV veio vazio — abortando pra não apagar a aba")
 
-    log(f"CSV tem {len(linhas)} linha(s) e {len(linhas[0])} coluna(s) (separador '{sep}')")
-    log(f"Cabeçalho: {linhas[0]}")
+    cabecalho = linhas[0]
+    novos = linhas[1:]
+
+    log(f"CSV tem {len(novos)} linha(s) de dados e {len(cabecalho)} coluna(s) "
+        f"(separador '{sep}')")
+    log(f"Cabeçalho: {cabecalho}")
+
+    # ── Mescla com o que já existe ──
+    # A Mira só entrega os últimos 30 dias. Se a gente substituísse a
+    # aba a cada execução, o histórico mais antigo iria sumindo. Então
+    # lemos o que já está lá, atualizamos as NFs que vieram no relatório
+    # novo e acrescentamos as que ainda não existiam.
+    try:
+        existentes = aba.get_all_values()
+    except Exception:
+        existentes = []
+
+    idx_nf = _achar_coluna_nf(cabecalho)
+
+    if not existentes or len(existentes) < 2:
+        log("Aba vazia — gravando o relatório inteiro")
+        finais = novos
+    elif idx_nf is None:
+        log("Não identifiquei a coluna de NF — substituindo a aba")
+        finais = novos
+    else:
+        antigos = existentes[1:]
+        por_nf = {}
+
+        for linha in antigos:
+            if idx_nf < len(linha):
+                chave = _chave_nf(linha[idx_nf])
+                if chave:
+                    por_nf[chave] = linha
+
+        antes = len(por_nf)
+        atualizadas = 0
+
+        for linha in novos:
+            if idx_nf >= len(linha):
+                continue
+            chave = _chave_nf(linha[idx_nf])
+            if not chave:
+                continue
+            if chave in por_nf:
+                atualizadas += 1
+            por_nf[chave] = linha
+
+        finais = list(por_nf.values())
+        log(f"Mesclado — {antes} já existiam, {atualizadas} atualizada(s), "
+            f"{len(finais) - antes} nova(s), {len(finais)} no total")
 
     aba.clear()
-    aba.update(values=linhas, range_name="A1")
-    log(f'Aba "{ABA_DESTINO}" atualizada')
-    return len(linhas)
+    aba.update(values=[cabecalho] + finais, range_name="A1")
+    log(f'Aba "{ABA_DESTINO}" atualizada com {len(finais)} linha(s)')
+    return len(finais)
+
+
+def _achar_coluna_nf(cabecalho):
+    """Descobre qual coluna é a nota fiscal, pelo nome do cabeçalho."""
+    for i, nome in enumerate(cabecalho):
+        if str(nome).strip().lower() in ("notafiscal", "nota fiscal", "nf"):
+            return i
+    for i, nome in enumerate(cabecalho):
+        if "nota" in str(nome).strip().lower():
+            return i
+    return None
+
+
+def _chave_nf(valor):
+    """A Mira exporta a NF como "1 000110117" — a NF real é 110117.
+    Normaliza pra que a mesma nota não entre duas vezes."""
+    s = str(valor or "").strip()
+    if not s:
+        return ""
+    numero = "".join(ch for ch in s.split()[-1] if ch.isdigit())
+    return str(int(numero)) if numero else ""
 
 
 # ── Principal ───────────────────────────────────────────────────

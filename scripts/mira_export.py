@@ -155,56 +155,78 @@ def abrir_relatorio(page, dias):
 
 # ── Etapa 3: baixar o CSV ───────────────────────────────────────
 
+def _menu_baixar_apareceu(page):
+    """Confirma que o menu aberto é o de opções, e não o de ordenar
+    coluna (Crescente / Decrescente / Ocultar)."""
+    return page.get_by_text("Baixar CSV", exact=False).count() > 0
+
+
 def abrir_menu_opcoes(page):
-    """O menu fica no ⋯ do canto superior direito, ao lado do
-    'Guia do rastreamento'."""
-    candidatos = [
-        lambda: page.get_by_role("button", name="⋯").first,
-        lambda: page.locator("[aria-label*='opç' i], [aria-label*='option' i]").first,
-        lambda: page.locator("button:has-text('⋯')").first,
-    ]
+    """Abre o menu ⋯ do canto superior direito.
 
-    for obter in candidatos:
-        try:
-            el = obter()
-            if el.count() > 0 and el.is_visible(timeout=2000):
-                el.click(timeout=5000)
-                page.wait_for_timeout(1200)
-                if page.get_by_text("Baixar CSV", exact=False).count() > 0:
-                    log("Menu de opções aberto")
-                    return True
-        except Exception:
-            continue
+    Cuidado: cada coluna da tabela tem seu próprio botãozinho de ordenar,
+    que abre um menu parecido (Crescente / Decrescente / Ocultar). Por
+    isso usamos o "Guia do rastreamento" como referência de altura — o ⋯
+    está na mesma linha dele, acima do cabeçalho da tabela — e depois de
+    cada clique verificamos se o menu certo abriu.
+    """
+    # Descobre a altura da barra de topo pelo "Guia do rastreamento"
+    y_limite = 120
+    try:
+        guia = page.get_by_text("Guia do rastreamento", exact=False).first
+        if guia.count() > 0:
+            cb = guia.bounding_box()
+            if cb:
+                y_limite = cb["y"] + cb["height"] + 10
+    except Exception:
+        pass
 
-    # Alternativa geométrica: o ⋯ é o botão mais à direita do cabeçalho
-    log("Tentando achar o menu pela posição no cabeçalho")
+    # Junta os botões que estão na barra de topo, da direita pra esquerda
+    candidatos = []
     botoes = page.locator("button, [role='button']")
-    melhor, melhor_x = None, -1
-
     for i in range(botoes.count()):
         b = botoes.nth(i)
         try:
             if not b.is_visible(timeout=200):
                 continue
             cb = b.bounding_box()
-            if not cb or cb["y"] > 140:      # só o topo da página
+            if not cb:
                 continue
-            if cb["width"] > 80:             # ignora botões largos
+            if cb["y"] > y_limite:      # abaixo da barra = tabela
                 continue
-            if cb["x"] > melhor_x:
-                melhor_x, melhor = cb["x"], b
+            if cb["width"] > 90:        # botões largos não são o ⋯
+                continue
+            candidatos.append((cb["x"], b))
         except Exception:
             continue
 
-    if melhor is not None:
+    if not candidatos:
+        salvar_debug(page, "sem_candidatos_menu")
+        return False
+
+    candidatos.sort(key=lambda t: t[0], reverse=True)
+    log(f"{len(candidatos)} botão(ões) na barra de topo; testando um a um")
+
+    for x, botao in candidatos[:6]:
         try:
-            melhor.click(timeout=5000)
+            botao.click(timeout=4000)
             page.wait_for_timeout(1200)
-            if page.get_by_text("Baixar CSV", exact=False).count() > 0:
-                log(f"Menu aberto pelo botão em x={melhor_x:.0f}")
+
+            if _menu_baixar_apareceu(page):
+                log(f"Menu de opções aberto (botão em x={x:.0f})")
                 return True
-        except Exception:
-            pass
+
+            log(f"Botão em x={x:.0f} abriu outro menu")
+            page.keyboard.press("Escape")
+            page.wait_for_timeout(600)
+
+        except Exception as e:
+            log(f"Botão em x={x:.0f} falhou: {e}")
+            try:
+                page.keyboard.press("Escape")
+                page.wait_for_timeout(400)
+            except Exception:
+                pass
 
     salvar_debug(page, "menu_opcoes_nao_abriu")
     return False

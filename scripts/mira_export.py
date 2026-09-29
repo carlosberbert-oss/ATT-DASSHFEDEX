@@ -71,6 +71,46 @@ def salvar_debug(page, nome):
 
 # ── Etapa 1: login ──────────────────────────────────────────────
 
+def _preencher_campo(page, campo, valor, nome):
+    """Preenche um campo e confere se o valor entrou inteiro.
+
+    O formulário é React, e digitar com type() às vezes perde caracteres
+    durante as re-renderizações do componente — já vimos um e-mail de 21
+    caracteres virar 19, o que faz o login falhar sem erro claro. Por
+    isso: digita, confere, e se não bater, limpa e tenta de novo.
+    """
+    for tentativa in range(1, 4):
+        campo.click()
+        # Limpa o que tiver antes de digitar
+        campo.press("Control+a")
+        campo.press("Delete")
+        page.wait_for_timeout(200)
+
+        campo.type(valor, delay=50)
+        page.wait_for_timeout(400)
+
+        atual = campo.input_value()
+        if atual == valor:
+            return
+
+        log(f"{nome}: esperava {len(valor)} caractere(s), entrou "
+            f"{len(atual)} — tentativa {tentativa}")
+
+    # Última alternativa: fill() de uma vez, com evento de input
+    log(f"{nome}: digitação falhou 3 vezes, tentando com fill()")
+    campo.fill("")
+    campo.fill(valor)
+    page.wait_for_timeout(400)
+
+    atual = campo.input_value()
+    if atual != valor:
+        salvar_debug(page, "campo_incompleto")
+        raise RuntimeError(
+            f"Não consegui preencher o campo de {nome} corretamente "
+            f"({len(atual)} de {len(valor)} caracteres) — veja debug/"
+        )
+
+
 def fazer_login(page, usuario, senha):
     log(f"Abrindo {MIRA_BASE}/login")
     page.goto(f"{MIRA_BASE}/login", wait_until="domcontentloaded",
@@ -78,42 +118,21 @@ def fazer_login(page, usuario, senha):
 
     # O campo de e-mail não tem atributo type — só name="email" e o
     # placeholder. Por isso a busca é pelo name, que os dois campos têm.
-    #
-    # E o formulário é React (Next.js): o fill() às vezes preenche
-    # visualmente sem disparar os eventos que o componente escuta, e o
-    # React continua achando que o campo está vazio. Por isso digitamos
-    # caractere a caractere com type(), que gera os eventos de teclado.
     log("Preenchendo e-mail")
     campo_email = page.locator(
         "input[name='email'], input[placeholder*='mail' i]"
     ).first
     campo_email.wait_for(state="visible", timeout=TIMEOUT_PADRAO_MS)
-    campo_email.click()
-    campo_email.type(usuario, delay=30)
+    _preencher_campo(page, campo_email, usuario, "e-mail")
 
     log("Preenchendo senha")
     campo_senha = page.locator(
         "input[name='password'], input[type='password']"
     ).first
     campo_senha.wait_for(state="visible", timeout=TIMEOUT_PADRAO_MS)
-    campo_senha.click()
-    campo_senha.type(senha, delay=30)
+    _preencher_campo(page, campo_senha, senha, "senha")
 
-    # Confere que os valores entraram de verdade antes de submeter —
-    # se algo falhou, o erro aqui é bem mais claro que a tela de
-    # validação do site.
-    valor_email = campo_email.input_value()
-    valor_senha = campo_senha.input_value()
-
-    if not valor_email or not valor_senha:
-        salvar_debug(page, "campos_vazios")
-        raise RuntimeError(
-            f"Os campos não foram preenchidos (e-mail: {len(valor_email)} "
-            f"caractere(s), senha: {len(valor_senha)}). "
-            "Confira se MIRA_USER e MIRA_PASSWORD estão configurados."
-        )
-
-    log(f"Campos preenchidos ({len(valor_email)} / {len(valor_senha)} caracteres)")
+    log("Campos preenchidos e conferidos")
     page.get_by_role("button", name="Entrar").first.click()
 
     log("Aguardando entrar")

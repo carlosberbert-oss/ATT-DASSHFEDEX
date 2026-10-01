@@ -1,0 +1,72 @@
+name: Baixa de entregas no Zecore
+
+on:
+  # Disparado por fora (cron-job.org), no mesmo esquema do QuickSight e
+  # da Mira. O workflow_dispatch é o que permite esse disparo.
+  workflow_dispatch:
+
+# Precisa de escrita pra salvar o histórico de baixas no repositório
+permissions:
+  contents: write
+
+# Nunca duas execuções ao mesmo tempo: se uma demorar e o cron disparar
+# de novo, a segunda espera a primeira terminar em vez de rodar junto
+concurrency:
+  group: zecore-baixas
+  cancel-in-progress: false
+
+jobs:
+  baixar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Instalar dependências
+        run: |
+          pip install -r requirements.txt
+          playwright install --with-deps chromium
+
+      - name: Dar baixa nos pedidos entregues
+        env:
+          ZECORE_USER: ${{ secrets.ZECORE_USER }}
+          ZECORE_PASSWORD: ${{ secrets.ZECORE_PASSWORD }}
+          GOOGLE_CREDS_JSON: ${{ secrets.GOOGLE_CREDS_JSON }}
+          CHAT_WEBHOOK_BAIXAS: ${{ secrets.CHAT_WEBHOOK_BAIXAS }}
+        run: python scripts/zecore_atualizar_entregas.py --executar --limite 15
+
+      # Roda mesmo se o passo anterior falhar: as baixas feitas antes do
+      # erro precisam ficar registradas, senão o robô tentaria de novo.
+      - name: Salvar histórico de baixas no repositório
+        if: always()
+        run: |
+          ARQ=dados/baixas_realizadas.json
+          [ -f "$ARQ" ] || { echo "Sem histórico pra salvar"; exit 0; }
+
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          # -f porque o .gitignore bloqueia *.json (protege as credenciais);
+          # só este arquivo específico é liberado
+          git add -f "$ARQ"
+
+          if git diff --cached --quiet; then
+            echo "Nenhuma baixa nova"
+          else
+            git commit -m "Baixas Zecore $(TZ=America/Sao_Paulo date '+%d/%m %H:%M')"
+            git pull --rebase
+            git push
+          fi
+
+      - name: Guardar evidências em caso de falha
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: debug-zecore-${{ github.run_number }}
+          path: debug/
+          retention-days: 14

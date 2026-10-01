@@ -162,7 +162,29 @@
       "arrangement": "FITLOG TRANSPORTES E LOGISTICA LTDA - 2026-09-22 08:22:10",
       "itens": 1,
       "task": "https://zecore.zebrands.mx/app/delivery-task/c3d7ee34d8"
+    },
+    "SAL-ORD-2609094aebfcf0|113978": {
+      "data": "2026-10-01T16:42:39-03:00",
+      "sales_order": "SAL-ORD-2609094aebfcf0",
+      "nf": "113978",
+      "carrier": "Mira",
+      "status_transportadora": "MERCADORIA ENTREGUE",
+      "master_guide": "35260942418313000104550010001139781953883323",
+      "arrangement": "Mira Transportes - 2026-09-09 08:31:25",
+      "itens": 1,
+      "task": "https://zecore.zebrands.mx/app/delivery-task/808e914bfa"
+    },
+    "SAL-ORD-260909b27d7361|114070": {
+      "data": "2026-10-01T16:43:24-03:00",
+      "sales_order": "SAL-ORD-260909b27d7361",
+      "nf": "114070",
+      "carrier": "Mira",
+      "status_transportadora": "MERCADORIA ENTREGUE",
+      "master_guide": "35260942418313000104550010001140701964565872",
+      "arrangement": "Mira Transportes - 2026-09-09 11:30:05",
+      "itens": 1,
+      "task": "https://zecore.zebrands.mx/app/delivery-task/0e1566e295"
     }
   },
-  "atualizado_em": "2026-10-01T15:10:53-03:00"
+  "atualizado_em": "2026-10-01T16:43:24-03:00"
 }

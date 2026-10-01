@@ -202,7 +202,29 @@
       "arrangement": "Mira Transportes - 2026-09-21 08:19:06",
       "itens": 1,
       "task": "https://zecore.zebrands.mx/app/delivery-task/7664cac15b"
+    },
+    "SAL-ORD-260910d79f4ad4|114408": {
+      "data": "2026-10-01T18:21:36-03:00",
+      "sales_order": "SAL-ORD-260910d79f4ad4",
+      "nf": "114408",
+      "carrier": "Mira",
+      "status_transportadora": "MERCADORIA ENTREGUE",
+      "master_guide": "35260942418313000104550010001144081128178946",
+      "arrangement": "Mira Transportes - 2026-09-11 08:59:40",
+      "itens": 1,
+      "task": "https://zecore.zebrands.mx/app/delivery-task/b002549ad9"
+    },
+    "SAL-ORD-2608309228359e|114410": {
+      "data": "2026-10-01T18:22:12-03:00",
+      "sales_order": "SAL-ORD-2608309228359e",
+      "nf": "114410",
+      "carrier": "Mira",
+      "status_transportadora": "MERCADORIA ENTREGUE",
+      "master_guide": "35260942418313000104550010001144101128187960",
+      "arrangement": "Mira Transportes - 2026-09-11 08:59:40",
+      "itens": 1,
+      "task": "https://zecore.zebrands.mx/app/delivery-task/1df6d7f84f"
     }
   },
-  "atualizado_em": "2026-10-01T17:01:58-03:00"
+  "atualizado_em": "2026-10-01T18:22:12-03:00"
 }

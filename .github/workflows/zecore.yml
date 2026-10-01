@@ -1,8 +1,8 @@
 name: Baixa de entregas no Zecore
 
 on:
-  # Disparado por fora (cron-job.org), no mesmo esquema do QuickSight e
-  # da Mira. O workflow_dispatch é o que permite esse disparo.
+  # Disparado por fora (cron-job.org), a cada 40 minutos.
+  # O workflow_dispatch é o que permite esse disparo.
   workflow_dispatch:
 
 # Precisa de escrita pra salvar o histórico de baixas no repositório
@@ -18,7 +18,7 @@ concurrency:
 jobs:
   baixar:
     runs-on: ubuntu-latest
-    timeout-minutes: 40
+    timeout-minutes: 90
 
     steps:
       - uses: actions/checkout@v4
@@ -27,18 +27,35 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Instalar dependências
+      # Só o necessário pra ler a planilha — leva segundos
+      - name: Instalar dependências da planilha
+        run: pip install "gspread>=6.1" "google-auth>=2.35"
+
+      # Conta os pendentes ANTES de instalar o navegador. Rodando 36 vezes
+      # por dia, instalar o Chromium em toda rodada vazia gastaria a cota
+      # de minutos do GitHub — e sem cota param TODOS os robôs do repositório.
+      - name: Verificar se há pedidos pra dar baixa
+        id: verificar
+        env:
+          GOOGLE_CREDS_JSON: ${{ secrets.GOOGLE_CREDS_JSON }}
+        run: python scripts/zecore_atualizar_entregas.py --verificar
+
+      - name: Instalar navegador
+        if: steps.verificar.outputs.pendentes != '0'
         run: |
           pip install -r requirements.txt
           playwright install --with-deps chromium
 
+      # Sem limite de baixas (--limite 0). O robô só interrompe a rodada
+      # se der 3 problemas seguidos — sinal de mudança na tela do Zecore.
       - name: Dar baixa nos pedidos entregues
+        if: steps.verificar.outputs.pendentes != '0'
         env:
           ZECORE_USER: ${{ secrets.ZECORE_USER }}
           ZECORE_PASSWORD: ${{ secrets.ZECORE_PASSWORD }}
           GOOGLE_CREDS_JSON: ${{ secrets.GOOGLE_CREDS_JSON }}
           CHAT_WEBHOOK_BAIXAS: ${{ secrets.CHAT_WEBHOOK_BAIXAS }}
-        run: python scripts/zecore_atualizar_entregas.py --executar --limite 15
+        run: python scripts/zecore_atualizar_entregas.py --executar --limite 0
 
       # Roda mesmo se o passo anterior falhar: as baixas feitas antes do
       # erro precisam ficar registradas, senão o robô tentaria de novo.

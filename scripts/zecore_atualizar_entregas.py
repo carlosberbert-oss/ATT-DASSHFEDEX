@@ -44,7 +44,14 @@ import urllib.request
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-from playwright.sync_api import sync_playwright, TimeoutError as PWTimeout
+try:
+    from playwright.sync_api import sync_playwright, TimeoutError as PWTimeout
+except ImportError:
+    # O modo --verificar roda antes de o navegador ser instalado
+    sync_playwright = None
+
+    class PWTimeout(Exception):
+        pass
 
 # ── Configuração ────────────────────────────────────────────────
 
@@ -78,7 +85,12 @@ def _status_conta_como_entregue(status):
 STATUS_ZECORE_PENDENTE = "DELIVERED TO CARRIER"
 CARRIERS = ["FITLOG", "MIRA"]          # Jamef fica de fora (tem API)
 
-LIMITE_PADRAO = 1                      # começa conservador
+LIMITE_PADRAO = 1                      # local começa conservador; no GitHub roda com --limite 0 (sem limite)
+
+# Não limita baixas: só interrompe a rodada quando vários pedidos SEGUIDOS
+# dão problema — sinal de que algo mudou na tela do Zecore e todos vão
+# falhar igual, deixando um monte de rascunho pendurado.
+MAX_PROBLEMAS_SEGUIDOS = 3
 
 TIMEOUT_MS = 45_000
 DIR_DEBUG = Path("debug")
@@ -206,7 +218,7 @@ def registrar_ja_baixado(hist, pedido, estados):
 
 # ── Aviso no Chat ───────────────────────────────────────────────
 
-def avisar_chat(webhook, baixas, problemas, ja_tinham_baixa):
+def avisar_chat(webhook, baixas, problemas, ja_tinham_baixa, interrompida=False):
     """Manda o resumo da rodada pro espaço de baixas. Só envia se houve
     baixa ou problema — rodada sem nada a fazer fica em silêncio."""
     if not webhook:
@@ -229,6 +241,12 @@ def avisar_chat(webhook, baixas, problemas, ja_tinham_baixa):
         linhas.append(f"⚠️ *{len(problemas)} com problema — nada foi alterado neles:*")
         for pb in problemas:
             linhas.append(f"• {pb['sales_order']} — {pb['motivo'][:160]}")
+        linhas.append("")
+
+    if interrompida:
+        linhas.append(f"🛑 *Rodada interrompida* depois de {MAX_PROBLEMAS_SEGUIDOS} problemas "
+                      "seguidos — pode ser mudança na tela do Zecore. Os demais pedidos "
+                      "ficam pra próxima rodada.")
         linhas.append("")
 
     if ja_tinham_baixa:
@@ -895,9 +913,34 @@ def main():
     p.add_argument("--executar", action="store_true",
                    help="faz tudo, incluindo o Submit (IRREVERSÍVEL)")
     p.add_argument("--headed", action="store_true")
-    p.add_argument("--limite", type=int, default=LIMITE_PADRAO)
+    p.add_argument("--limite", type=int, default=LIMITE_PADRAO,
+                   help="máximo de baixas por rodada (0 = sem limite)")
+    p.add_argument("--verificar", action="store_true",
+                   help="só conta os pendentes da planilha, sem abrir o Zecore")
     p.add_argument("--pedido", help="processa só este Sales Order")
     args = p.parse_args()
+
+    # ── Modo verificar: só conta, pra o workflow decidir se instala o
+    #    navegador. Rodada sem nada a fazer termina em segundos. ──
+    if args.verificar:
+        creds_json = os.environ.get("GOOGLE_CREDS_JSON")
+        if not creds_json:
+            sys.exit("Falta GOOGLE_CREDS_JSON")
+        sheet_id = os.environ.get("SHEET_ID", SHEET_ID_PADRAO)
+        hist = carregar_historico()
+        pendentes = [
+            pd for pd in ler_pendentes(sheet_id, creds_json, None)
+            if _chave(pd["sales_order"], _nf_normalizada(pd["nf"])) not in hist["baixas"]
+        ]
+        log(f"{len(pendentes)} pedido(s) pra processar (fora os que já estão no histórico)")
+        saida = os.environ.get("GITHUB_OUTPUT")
+        if saida:
+            with open(saida, "a", encoding="utf-8") as f:
+                f.write(f"pendentes={len(pendentes)}\n")
+        return
+
+    if sync_playwright is None:
+        sys.exit("O Playwright não está instalado (pip install playwright)")
 
     if args.reconhecer:
         modo = "reconhecer"
@@ -944,6 +987,7 @@ def main():
         return
 
     resultados = []
+    interrompida = False
 
     with sync_playwright() as pw:
         navegador = pw.chromium.launch(
@@ -964,9 +1008,15 @@ def main():
             # já atualizados — o robô abre, vê que não há item pendente e
             # pula. Esses não gastam o limite.
             feitos = 0
+            seguidos = 0
             for pedido in pendentes:
                 if args.limite and feitos >= args.limite:
                     log(f"Limite de {args.limite} atingido — parando")
+                    break
+                if seguidos >= MAX_PROBLEMAS_SEGUIDOS:
+                    interrompida = True
+                    log(f"{seguidos} problemas seguidos — interrompendo a rodada "
+                        "(pode ser mudança na tela do Zecore)")
                     break
                 try:
                     r = processar(page, pedido, modo)
@@ -975,6 +1025,8 @@ def main():
                     resultados.append(r)
                     if r.get("ok"):
                         feitos += 1
+                    problema = not r.get("ok") and r.get("motivo") != "sem item pendente"
+                    seguidos = seguidos + 1 if problema else 0
                     # Grava a cada baixa, não só no fim: se der erro no
                     # meio, o que já foi feito não se perde
                     if r.get("ok") and r.get("modo") == "executar":
@@ -985,6 +1037,7 @@ def main():
                         salvar_historico(hist)
                         log("Anotado no histórico — não será reaberto nas próximas rodadas")
                 except Exception as e:
+                    seguidos += 1
                     log(f"✗ {pedido['sales_order']}: {e}")
                     salvar_debug(page, f"erro_{pedido['sales_order']}")
                     resultados.append({
@@ -1035,7 +1088,7 @@ def main():
         ]
         ja_tinham = sum(1 for r in resultados if r.get("motivo") == "sem item pendente")
 
-        avisar_chat(os.environ.get("CHAT_WEBHOOK_BAIXAS"), baixas, problemas, ja_tinham)
+        avisar_chat(os.environ.get("CHAT_WEBHOOK_BAIXAS"), baixas, problemas, ja_tinham, interrompida)
 
 
 if __name__ == "__main__":

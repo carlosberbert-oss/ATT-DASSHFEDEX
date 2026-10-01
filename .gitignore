@@ -1,10 +1,19 @@
+# Saídas dos robôs
 saida/
 debug/
+reconhecimento/
+
+# Credenciais — NUNCA commitar
 *.json
 !package.json
 .env
 credenciais*.json
 service-account*.json
+
+# Exceção: histórico de baixas do Zecore (o robô salva e faz commit)
+!dados/baixas_realizadas.json
+
+# Python
 __pycache__/
 *.pyc
 venv/

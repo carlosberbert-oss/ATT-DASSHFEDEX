@@ -235,7 +235,18 @@
       "arrangement": "Mira Transportes - 2026-08-27 08:17:01",
       "itens": 1,
       "task": "https://zecore.zebrands.mx/app/delivery-task/efbe3d5e36"
+    },
+    "SAL-ORD-2609081c3f9d46|113980": {
+      "data": "2026-10-02T09:02:54-03:00",
+      "sales_order": "SAL-ORD-2609081c3f9d46",
+      "nf": "113980",
+      "carrier": "Mira",
+      "status_transportadora": "MERCADORIA ENTREGUE",
+      "master_guide": "35260942418313000104550010001139801953884735",
+      "arrangement": "Mira Transportes - 2026-09-09 08:31:25",
+      "itens": 1,
+      "task": "https://zecore.zebrands.mx/app/delivery-task/9839d5ea8d"
     }
   },
-  "atualizado_em": "2026-10-02T08:41:06-03:00"
+  "atualizado_em": "2026-10-02T09:03:03-03:00"
 }

@@ -505,7 +505,14 @@
       "arrangement": "FITLOG TRANSPORTES E LOGISTICA LTDA - 2026-10-02 08:42:11",
       "itens": 1,
       "task": "https://zecore.zebrands.mx/app/delivery-task/9cf4cdd883"
+    },
+    "SAL-ORD-260928f9bd0a02|116096": {
+      "data": "2026-10-06T11:21:26-03:00",
+      "sales_order": "SAL-ORD-260928f9bd0a02",
+      "nf": "116096",
+      "carrier": "Fitlog",
+      "origem": "ja_tinha_baixa"
     }
   },
-  "atualizado_em": "2026-10-06T11:01:58-03:00"
+  "atualizado_em": "2026-10-06T11:22:07-03:00"
 }

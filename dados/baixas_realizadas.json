@@ -545,7 +545,51 @@
       "arrangement": "Mira Transportes - 2026-09-15 11:49:23",
       "itens": 14,
       "task": "https://zecore.zebrands.mx/app/delivery-task/4e67b12dfb"
+    },
+    "SAL-ORD-2609139b921651|114592": {
+      "data": "2026-10-06T12:54:49-03:00",
+      "sales_order": "SAL-ORD-2609139b921651",
+      "nf": "114592",
+      "carrier": "Mira",
+      "status_transportadora": "MERCADORIA ENTREGUE",
+      "master_guide": "35260942418313000104550010001145921385857000",
+      "arrangement": "Mira Transportes - 2026-09-14 08:18:27",
+      "itens": 1,
+      "task": "https://zecore.zebrands.mx/app/delivery-task/14fa32e195"
+    },
+    "SAL-ORD-260922c99bada8|116100": {
+      "data": "2026-10-06T12:55:29-03:00",
+      "sales_order": "SAL-ORD-260922c99bada8",
+      "nf": "116100",
+      "carrier": "Fitlog",
+      "status_transportadora": "MERCADORIA ENTREGUE",
+      "master_guide": "35260942418313000104550010001161001681468701",
+      "arrangement": "FITLOG TRANSPORTES E LOGISTICA LTDA - 2026-09-29 08:26:34",
+      "itens": 2,
+      "task": "https://zecore.zebrands.mx/app/delivery-task/b332a690ad"
+    },
+    "SAL-ORD-2609284bfa1fe2|116102": {
+      "data": "2026-10-06T12:56:05-03:00",
+      "sales_order": "SAL-ORD-2609284bfa1fe2",
+      "nf": "116102",
+      "carrier": "Fitlog",
+      "status_transportadora": "MERCADORIA ENTREGUE",
+      "master_guide": "35260942418313000104550010001161021681473050",
+      "arrangement": "FITLOG TRANSPORTES E LOGISTICA LTDA - 2026-09-29 08:26:34",
+      "itens": 3,
+      "task": "https://zecore.zebrands.mx/app/delivery-task/a3164bd267"
+    },
+    "SAL-ORD-260928a6bea470|116436": {
+      "data": "2026-10-06T12:56:59-03:00",
+      "sales_order": "SAL-ORD-260928a6bea470",
+      "nf": "116436",
+      "carrier": "Fitlog",
+      "status_transportadora": "MERCADORIA ENTREGUE",
+      "master_guide": "35261042418313000104550010001164361949657809",
+      "arrangement": "FITLOG TRANSPORTES E LOGISTICA LTDA - 2026-10-02 10:53:45",
+      "itens": 1,
+      "task": "https://zecore.zebrands.mx/app/delivery-task/ea5495c6f4"
     }
   },
-  "atualizado_em": "2026-10-06T12:41:26-03:00"
+  "atualizado_em": "2026-10-06T12:57:12-03:00"
 }

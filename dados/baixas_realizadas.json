@@ -662,7 +662,14 @@
       "nf": "116427",
       "carrier": "Fitlog",
       "origem": "ja_tinha_baixa"
+    },
+    "SAL-ORD-26090889fc41d2|116429": {
+      "data": "2026-10-07T08:51:39-03:00",
+      "sales_order": "SAL-ORD-26090889fc41d2",
+      "nf": "116429",
+      "carrier": "Fitlog",
+      "origem": "ja_tinha_baixa"
     }
   },
-  "atualizado_em": "2026-10-07T08:41:18-03:00"
+  "atualizado_em": "2026-10-07T08:51:48-03:00"
 }

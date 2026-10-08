@@ -216,6 +216,87 @@ def registrar_ja_baixado(hist, pedido, estados):
     return True
 
 
+# ── Fila de remoção na planilha ─────────────────────────────────
+# O robô NÃO apaga linhas da Rastreamento: o rastreio do Apps Script grava
+# status pelo número da linha durante vários minutos, e uma linha apagada
+# por fora no meio disso desloca todas as de baixo — o status iria pra
+# linha errada. Em vez disso, ele anota o pedido na aba "Baixas Zecore",
+# e o próprio Apps Script apaga, dentro da trava dele, no começo da
+# rodada seguinte. Acrescentar linha em OUTRA aba não desloca nada.
+ABA_FILA_BAIXAS = "Baixas Zecore"
+CAB_FILA = ["Data/hora", "NF", "Sales Order", "Transportadora", "Origem",
+            "Removido da Rastreamento em"]
+
+
+class FilaBaixas:
+    def __init__(self, sheet_id, creds_json):
+        self.ws = None
+        self.nfs = set()
+        try:
+            import gspread
+            from google.oauth2.service_account import Credentials
+            creds = Credentials.from_service_account_info(
+                json.loads(creds_json),
+                scopes=["https://www.googleapis.com/auth/spreadsheets"],
+            )
+            planilha = gspread.authorize(creds).open_by_key(sheet_id)
+            try:
+                self.ws = planilha.worksheet(ABA_FILA_BAIXAS)
+            except gspread.WorksheetNotFound:
+                self.ws = planilha.add_worksheet(title=ABA_FILA_BAIXAS, rows=1000,
+                                                 cols=len(CAB_FILA))
+                self.ws.update(values=[CAB_FILA], range_name="A1")
+                log(f'Aba "{ABA_FILA_BAIXAS}" criada')
+            for v in self.ws.col_values(2)[1:]:
+                n = _nf_normalizada(v)
+                if n:
+                    self.nfs.add(n)
+        except Exception as e:
+            log(f'Não consegui abrir a aba "{ABA_FILA_BAIXAS}" ({e}) — '
+                "as linhas não serão removidas da Rastreamento nesta rodada")
+            self.ws = None
+
+    def adicionar(self, itens):
+        """itens: lista de (pedido, nf, origem). Ignora NF que já está na fila."""
+        if not self.ws:
+            return 0
+        novos = []
+        for pedido, nf, origem in itens:
+            n = _nf_normalizada(nf)
+            if not n or n in self.nfs:
+                continue
+            self.nfs.add(n)
+            novos.append([
+                agora_br().strftime("%d/%m/%Y %H:%M"), str(nf),
+                pedido.get("sales_order", ""), _carrier_curto(pedido.get("carrier")),
+                origem, "",
+            ])
+        if not novos:
+            return 0
+        try:
+            # RAW pra o Sheets não transformar "115879-1" em data
+            self.ws.append_rows(novos, value_input_option="RAW", table_range="A1")
+            return len(novos)
+        except Exception as e:
+            log(f'Não consegui anotar na aba "{ABA_FILA_BAIXAS}": {e}')
+            return 0
+
+
+def enfileirar_do_historico(fila, todos, hist):
+    """Pedidos que estão na planilha e que o ROBÔ já baixou numa rodada
+    anterior também têm que sair da Rastreamento. Os que ele só encontrou
+    já entregues (baixa manual) ficam de fora — só sai o que ele baixou."""
+    ja = []
+    for pd in todos:
+        reg = hist["baixas"].get(_chave(pd["sales_order"], _nf_normalizada(pd["nf"])))
+        if reg is not None and reg.get("origem") != "ja_tinha_baixa":
+            ja.append((pd, pd["nf"], "baixa pelo robô"))
+    n = fila.adicionar(ja) if ja else 0
+    if n:
+        log(f"{n} pedido(s) baixado(s) em rodada anterior anotado(s) pra sair da Rastreamento")
+    return n
+
+
 # ── Aviso no Chat ───────────────────────────────────────────────
 
 def avisar_chat(webhook, baixas, problemas, ja_tinham_baixa, interrompida=False):
@@ -251,6 +332,10 @@ def avisar_chat(webhook, baixas, problemas, ja_tinham_baixa, interrompida=False)
 
     if ja_tinham_baixa:
         linhas.append(f"_{ja_tinham_baixa} já estavam com baixa no Zecore e foram pulados._")
+
+    if baixas:
+        linhas.append("_As linhas dos pedidos com baixa saem da Rastreamento na próxima "
+                      "rodada do rastreio (até 20 min). Os com problema continuam lá._")
 
     corpo = json.dumps({"text": "\n".join(linhas).strip()}).encode("utf-8")
     req = urllib.request.Request(
@@ -928,10 +1013,14 @@ def main():
             sys.exit("Falta GOOGLE_CREDS_JSON")
         sheet_id = os.environ.get("SHEET_ID", SHEET_ID_PADRAO)
         hist = carregar_historico()
+        todos = ler_pendentes(sheet_id, creds_json, None)
         pendentes = [
-            pd for pd in ler_pendentes(sheet_id, creds_json, None)
+            pd for pd in todos
             if _chave(pd["sales_order"], _nf_normalizada(pd["nf"])) not in hist["baixas"]
         ]
+        # Mesmo sem nada pra baixar, os já baixados precisam sair da Rastreamento
+        if len(todos) != len(pendentes):
+            enfileirar_do_historico(FilaBaixas(sheet_id, creds_json), todos, hist)
         log(f"{len(pendentes)} pedido(s) pra processar (fora os que já estão no histórico)")
         saida = os.environ.get("GITHUB_OUTPUT")
         if saida:
@@ -972,7 +1061,10 @@ def main():
 
     # Pula quem já está no histórico, sem nem abrir o Zecore
     hist = carregar_historico()
+    fila = FilaBaixas(sheet_id, creds_json) if (modo == "executar" and creds_json) else None
     if not args.pedido:
+        if fila:
+            enfileirar_do_historico(fila, pendentes, hist)
         antes = len(pendentes)
         pendentes = [
             pd for pd in pendentes
@@ -1032,6 +1124,10 @@ def main():
                     if r.get("ok") and r.get("modo") == "executar":
                         registrar_baixa(hist, pedido, r)
                         salvar_historico(hist)
+                        if fila:
+                            nf_fila = (pedido["nf"] if _nf_normalizada(pedido.get("nf"))
+                                       else _nf_do_master_guide(r.get("master_guide")))
+                            fila.adicionar([(pedido, nf_fila, "baixa pelo robô")])
                     elif (modo == "executar" and r.get("motivo") == "sem item pendente"
                           and registrar_ja_baixado(hist, pedido, r.get("estados"))):
                         salvar_historico(hist)

@@ -87,10 +87,15 @@ CARRIERS = ["FITLOG", "MIRA"]          # Jamef fica de fora (tem API)
 
 LIMITE_PADRAO = 1                      # local começa conservador; no GitHub roda com --limite 0 (sem limite)
 
-# Não limita baixas: só interrompe a rodada quando vários pedidos SEGUIDOS
-# dão problema — sinal de que algo mudou na tela do Zecore e todos vão
-# falhar igual, deixando um monte de rascunho pendurado.
-MAX_PROBLEMAS_SEGUIDOS = 3
+# Pedido que deu problema não trava a rodada: vai pro fim da fila e só é
+# tentado de novo depois de um tempo. Assim os outros seguem normalmente,
+# e o mesmo pedido problemático não é reaberto (nem gera rascunho) a cada
+# 20 minutos.
+ESPERA_APOS_PROBLEMA_MIN = 120
+
+# No Chat, cada problema é avisado uma vez; se continuar, é lembrado de
+# novo só depois deste intervalo — senão seriam dezenas de avisos iguais.
+REAVISAR_PROBLEMA_H = 24
 
 TIMEOUT_MS = 45_000
 DIR_DEBUG = Path("debug")
@@ -167,6 +172,16 @@ def salvar_historico(hist):
         except Exception:
             mantidos[chave] = reg
     hist["baixas"] = mantidos
+
+    limite_prob = agora_br() - timedelta(days=7)
+    probs = {}
+    for k, reg in hist.get("problemas", {}).items():
+        try:
+            if datetime.fromisoformat(reg["ultima"]) >= limite_prob:
+                probs[k] = reg
+        except Exception:
+            probs[k] = reg
+    hist["problemas"] = probs
     hist["atualizado_em"] = agora_br().isoformat(timespec="seconds")
 
     ARQ_HISTORICO.parent.mkdir(parents=True, exist_ok=True)
@@ -297,9 +312,76 @@ def enfileirar_do_historico(fila, todos, hist):
     return n
 
 
+# ── Pedidos com problema ────────────────────────────────────────
+
+def _problemas(hist):
+    return hist.setdefault("problemas", {})
+
+
+def _chave_pedido(pedido):
+    nf = _nf_normalizada(pedido.get("nf"))
+    return _chave(pedido["sales_order"], nf) if nf else None
+
+
+def em_espera(hist, pedido):
+    """Deu problema há menos de ESPERA_APOS_PROBLEMA_MIN? Então fica pra depois."""
+    k = _chave_pedido(pedido)
+    reg = _problemas(hist).get(k) if k else None
+    if not reg:
+        return False
+    try:
+        quando = datetime.fromisoformat(reg["ultima"])
+        return agora_br() - quando < timedelta(minutes=ESPERA_APOS_PROBLEMA_MIN)
+    except Exception:
+        return False
+
+
+def registrar_problema(hist, pedido, motivo):
+    """Anota o problema. Devolve True se é pra avisar no Chat agora
+    (primeira vez, ou já faz REAVISAR_PROBLEMA_H desde o último aviso)."""
+    k = _chave_pedido(pedido)
+    if not k:
+        return True
+    agora = agora_br()
+    reg = _problemas(hist).setdefault(k, {"vezes": 0})
+    reg["vezes"] += 1
+    reg["ultima"] = agora.isoformat(timespec="seconds")
+    reg["motivo"] = str(motivo)[:200]
+
+    avisar = True
+    if reg.get("avisado_em"):
+        try:
+            avisar = agora - datetime.fromisoformat(reg["avisado_em"]) >= timedelta(hours=REAVISAR_PROBLEMA_H)
+        except Exception:
+            avisar = True
+    if avisar:
+        reg["avisado_em"] = reg["ultima"]
+    return avisar
+
+
+def limpar_problema(hist, pedido):
+    k = _chave_pedido(pedido)
+    if k:
+        _problemas(hist).pop(k, None)
+
+
+def ordenar_e_filtrar(pendentes, hist):
+    """Tira quem está esperando depois de um problema, e põe quem já deu
+    problema antes no FIM da fila — os pedidos novos vêm primeiro."""
+    prontos, esperando = [], 0
+    for pd in pendentes:
+        if em_espera(hist, pd):
+            esperando += 1
+        else:
+            prontos.append(pd)
+    probs = _problemas(hist)
+    prontos.sort(key=lambda pd: _chave_pedido(pd) in probs)
+    return prontos, esperando
+
+
 # ── Aviso no Chat ───────────────────────────────────────────────
 
-def avisar_chat(webhook, baixas, problemas, ja_tinham_baixa, interrompida=False):
+def avisar_chat(webhook, baixas, problemas, ja_tinham_baixa):
     """Manda o resumo da rodada pro espaço de baixas. Só envia se houve
     baixa ou problema — rodada sem nada a fazer fica em silêncio."""
     if not webhook:
@@ -319,15 +401,10 @@ def avisar_chat(webhook, baixas, problemas, ja_tinham_baixa, interrompida=False)
         linhas.append("")
 
     if problemas:
-        linhas.append(f"⚠️ *{len(problemas)} com problema — nada foi alterado neles:*")
+        linhas.append(f"⚠️ *{len(problemas)} com problema — nada foi alterado neles "
+                      f"(nova tentativa a cada {ESPERA_APOS_PROBLEMA_MIN // 60}h):*")
         for pb in problemas:
             linhas.append(f"• {pb['sales_order']} — {pb['motivo'][:160]}")
-        linhas.append("")
-
-    if interrompida:
-        linhas.append(f"🛑 *Rodada interrompida* depois de {MAX_PROBLEMAS_SEGUIDOS} problemas "
-                      "seguidos — pode ser mudança na tela do Zecore. Os demais pedidos "
-                      "ficam pra próxima rodada.")
         linhas.append("")
 
     if ja_tinham_baixa:
@@ -1072,8 +1149,11 @@ def main():
             pd for pd in todos
             if _chave(pd["sales_order"], _nf_normalizada(pd["nf"])) not in hist["baixas"]
         ]
+        pendentes, _esperando = ordenar_e_filtrar(pendentes, hist)
+        if _esperando:
+            log(f"{_esperando} pedido(s) aguardando nova tentativa depois de problema")
         # Mesmo sem nada pra baixar, os já baixados precisam sair da Rastreamento
-        if len(todos) != len(pendentes):
+        if len(todos) != len(pendentes) + _esperando:
             enfileirar_do_historico(FilaBaixas(sheet_id, creds_json), todos, hist)
         log(f"{len(pendentes)} pedido(s) pra processar (fora os que já estão no histórico)")
         saida = os.environ.get("GITHUB_OUTPUT")
@@ -1126,6 +1206,9 @@ def main():
         ]
         if antes != len(pendentes):
             log(f"{antes - len(pendentes)} já estavam no histórico de baixas — pulados")
+        pendentes, esperando = ordenar_e_filtrar(pendentes, hist)
+        if esperando:
+            log(f"{esperando} pedido(s) com problema recente — nova tentativa daqui a pouco")
 
     if not pendentes:
         log("Nada a fazer")
@@ -1133,7 +1216,6 @@ def main():
         return
 
     resultados = []
-    interrompida = False
 
     with sync_playwright() as pw:
         navegador = pw.chromium.launch(
@@ -1154,15 +1236,9 @@ def main():
             # já atualizados — o robô abre, vê que não há item pendente e
             # pula. Esses não gastam o limite.
             feitos = 0
-            seguidos = 0
             for pedido in pendentes:
                 if args.limite and feitos >= args.limite:
                     log(f"Limite de {args.limite} atingido — parando")
-                    break
-                if seguidos >= MAX_PROBLEMAS_SEGUIDOS:
-                    interrompida = True
-                    log(f"{seguidos} problemas seguidos — interrompendo a rodada "
-                        "(pode ser mudança na tela do Zecore)")
                     break
                 try:
                     r = processar(page, pedido, modo)
@@ -1171,8 +1247,12 @@ def main():
                     resultados.append(r)
                     if r.get("ok"):
                         feitos += 1
-                    problema = not r.get("ok") and r.get("motivo") != "sem item pendente"
-                    seguidos = seguidos + 1 if problema else 0
+                    if modo == "executar":
+                        if r.get("ok") or r.get("motivo") == "sem item pendente":
+                            limpar_problema(hist, pedido)
+                        else:
+                            r["avisar"] = registrar_problema(hist, pedido, r.get("motivo"))
+                            salvar_historico(hist)
                     # Grava a cada baixa, não só no fim: se der erro no
                     # meio, o que já foi feito não se perde
                     if r.get("ok") and r.get("modo") == "executar":
@@ -1187,13 +1267,17 @@ def main():
                         salvar_historico(hist)
                         log("Anotado no histórico — não será reaberto nas próximas rodadas")
                 except Exception as e:
-                    seguidos += 1
                     log(f"✗ {pedido['sales_order']}: {e}")
                     salvar_debug(page, f"erro_{pedido['sales_order']}")
+                    avisar = True
+                    if modo == "executar":
+                        avisar = registrar_problema(hist, pedido, e)
+                        salvar_historico(hist)
                     resultados.append({
                         "ok": False,
                         "sales_order": pedido["sales_order"],
                         "erro": str(e),
+                        "avisar": avisar,
                     })
 
         finally:
@@ -1235,10 +1319,11 @@ def main():
             {"sales_order": r["sales_order"], "motivo": r.get("erro") or r.get("motivo") or "?"}
             for r in resultados
             if not r.get("ok") and r.get("motivo") != "sem item pendente"
+            and r.get("avisar", True)
         ]
         ja_tinham = sum(1 for r in resultados if r.get("motivo") == "sem item pendente")
 
-        avisar_chat(os.environ.get("CHAT_WEBHOOK_BAIXAS"), baixas, problemas, ja_tinham, interrompida)
+        avisar_chat(os.environ.get("CHAT_WEBHOOK_BAIXAS"), baixas, problemas, ja_tinham)
 
 
 if __name__ == "__main__":

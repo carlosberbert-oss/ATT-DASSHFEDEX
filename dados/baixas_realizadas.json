@@ -1228,9 +1228,53 @@
       "arrangement": "FITLOG TRANSPORTES E LOGISTICA LTDA - 2026-10-08 11:36:02",
       "itens": 2,
       "task": "https://zecore.zebrands.mx/app/delivery-task/25dbba0116"
+    },
+    "SAL-ORD-2609285827cd7b|116106": {
+      "data": "2026-10-09T16:21:42-03:00",
+      "sales_order": "SAL-ORD-2609285827cd7b",
+      "nf": "116106",
+      "carrier": "Mira",
+      "status_transportadora": "MERCADORIA PRE-ENTREGUE (MOBILE)",
+      "master_guide": "35260942418313000104550010001161061681491707",
+      "arrangement": "Mira Transportes - 2026-09-29 08:27:29",
+      "itens": 1,
+      "task": "https://zecore.zebrands.mx/app/delivery-task/3d2873f967"
+    },
+    "SAL-ORD-2610020a0398ad|116589": {
+      "data": "2026-10-09T16:22:19-03:00",
+      "sales_order": "SAL-ORD-2610020a0398ad",
+      "nf": "116589",
+      "carrier": "Fitlog",
+      "status_transportadora": "MERCADORIA ENTREGUE",
+      "master_guide": "35261042418313000104550010001165891200496077",
+      "arrangement": "FITLOG TRANSPORTES E LOGISTICA LTDA - 2026-10-05 08:26:54",
+      "itens": 1,
+      "task": "https://zecore.zebrands.mx/app/delivery-task/7a2652684e"
+    },
+    "SAL-ORD-261003e97817f8|116595": {
+      "data": "2026-10-09T16:22:55-03:00",
+      "sales_order": "SAL-ORD-261003e97817f8",
+      "nf": "116595",
+      "carrier": "Fitlog",
+      "status_transportadora": "MERCADORIA ENTREGUE",
+      "master_guide": "35261042418313000104550010001165951200508943",
+      "arrangement": "FITLOG TRANSPORTES E LOGISTICA LTDA - 2026-10-05 08:26:54",
+      "itens": 1,
+      "task": "https://zecore.zebrands.mx/app/delivery-task/9719daaac4"
+    },
+    "SAL-ORD-2610020a0398ad|116716": {
+      "data": "2026-10-09T16:23:36-03:00",
+      "sales_order": "SAL-ORD-2610020a0398ad",
+      "nf": "116716",
+      "carrier": "Fitlog",
+      "status_transportadora": "MERCADORIA ENTREGUE",
+      "master_guide": "35261042418313000104550010001167161286978347",
+      "arrangement": "FITLOG TRANSPORTES E LOGISTICA LTDA - 2026-10-06 08:30:02",
+      "itens": 1,
+      "task": "https://zecore.zebrands.mx/app/delivery-task/06b907af6d"
     }
   },
-  "atualizado_em": "2026-10-09T16:11:30-03:00",
+  "atualizado_em": "2026-10-09T16:23:36-03:00",
   "problemas": {
     "SAL-ORD-260827065203b0|112705": {
       "vezes": 4,

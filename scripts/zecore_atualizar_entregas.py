@@ -488,20 +488,72 @@ def _fechar_item(page):
     page.wait_for_timeout(1200)
 
 
+def _link_do_item(linha, doctype):
+    """Procura o link SÓ dentro da linha do item. No Frappe o formulário
+    de edição abre dentro da própria linha, então tudo que é daquele item
+    está ali dentro."""
+    try:
+        el = linha.locator(f"a[data-doctype='{doctype}']")
+        if el.count() > 0:
+            return (el.first.get_attribute("data-name") or "").strip(), el.first
+    except Exception:
+        pass
+    return "", None
+
+
 def extrair_dados_item(page, linha):
-    """Abre a linha e lê Master Guide e o link do Arrangement."""
+    """Abre a linha e lê o Master Guide e o Arrangement DAQUELE item.
+
+    Antes a busca era na página inteira, pegando o primeiro link que
+    aparecesse. Só que a tabela de itens também mostra o Master Guide de
+    cada linha como link — então, num pedido com várias NFs, abrir o
+    terceiro item e ler "o primeiro da página" devolvia o Master Guide do
+    PRIMEIRO item. O robô achava que nenhum item era da NF procurada.
+    """
+    # Master Guide da célula da própria linha, antes de abrir
+    mg_linha, _ = _link_do_item(linha, "Shipping Master Tracker")
+
     linha.locator(".btn-open-row").first.click()
     page.wait_for_timeout(2500)
 
-    master = page.locator("a[data-doctype='Shipping Master Tracker']").first
-    if master.count() == 0:
-        raise RuntimeError("Não achei o Master Guide na tela do item")
-    master_guide = (master.get_attribute("data-name") or "").strip()
+    # Depois de aberto: formulário dentro da mesma linha
+    mg_form, _ = _link_do_item(linha, "Shipping Master Tracker")
+    if not mg_form:
+        try:
+            el = page.locator(".grid-row-open a[data-doctype='Shipping Master Tracker']")
+            if el.count() > 0:
+                mg_form = (el.first.get_attribute("data-name") or "").strip()
+        except Exception:
+            pass
 
-    arranjo = page.locator("a[data-doctype='Arrangement']").first
-    if arranjo.count() == 0:
-        raise RuntimeError("Não achei o link do Arrangement")
-    arrangement_nome = (arranjo.get_attribute("data-name") or "").strip()
+    master_guide = mg_linha or mg_form
+    if not master_guide:
+        raise RuntimeError("Não achei o Master Guide deste item")
+    if mg_linha and mg_form and mg_linha != mg_form:
+        raise RuntimeError(
+            f"Master Guide da linha ({mg_linha}) diferente do formulário ({mg_form}) — "
+            "não vou arriscar"
+        )
+
+    # Arrangement: só aparece no formulário aberto
+    arrangement_nome, arranjo = _link_do_item(linha, "Arrangement")
+    if arranjo is None:
+        try:
+            el = page.locator(".grid-row-open a[data-doctype='Arrangement']")
+            if el.count() == 0:
+                # Último recurso: na página toda, mas só se houver UM
+                # (com um único item aberto, é o dele)
+                el = page.locator("a[data-doctype='Arrangement']")
+                if el.count() != 1:
+                    el = None
+            if el is not None and el.count() > 0:
+                arranjo = el.first
+                arrangement_nome = (arranjo.get_attribute("data-name") or "").strip()
+        except Exception:
+            arranjo = None
+    if arranjo is None or not arrangement_nome:
+        raise RuntimeError("Não achei o Arrangement deste item")
+
     arrangement_href = arranjo.get_attribute("href") or ""
 
     return {
@@ -1003,6 +1055,8 @@ def main():
     p.add_argument("--verificar", action="store_true",
                    help="só conta os pendentes da planilha, sem abrir o Zecore")
     p.add_argument("--pedido", help="processa só este Sales Order")
+    p.add_argument("--nf", help="com --pedido: a NF da planilha (ex: 115541-1), "
+                                "pra escolher o item certo em pedido com várias NFs")
     args = p.parse_args()
 
     # ── Modo verificar: só conta, pra o workflow decidir se instala o
@@ -1051,7 +1105,7 @@ def main():
         sys.exit("Faltam ZECORE_USER e ZECORE_PASSWORD")
 
     if args.pedido:
-        pendentes = [{"linha": 0, "nf": "?", "sales_order": args.pedido,
+        pendentes = [{"linha": 0, "nf": args.nf or "?", "sales_order": args.pedido,
                       "carrier": "?", "status": "?"}]
         log(f"Pedido informado na linha de comando: {args.pedido}")
     else:

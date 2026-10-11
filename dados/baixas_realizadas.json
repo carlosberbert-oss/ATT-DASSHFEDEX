@@ -1398,7 +1398,7 @@
       "task": "https://zecore.zebrands.mx/app/delivery-task/92b4f8cd56"
     }
   },
-  "atualizado_em": "2026-10-11T10:01:12-03:00",
+  "atualizado_em": "2026-10-11T10:31:24-03:00",
   "problemas": {
     "SAL-ORD-260827065203b0|112705": {
       "vezes": 24,
@@ -1407,8 +1407,8 @@
       "avisado_em": "2026-10-10T10:11:12-03:00"
     },
     "FREE-SAL-ORD-2610060b76278f|116874": {
-      "vezes": 22,
-      "ultima": "2026-10-11T08:21:27-03:00",
+      "vezes": 23,
+      "ultima": "2026-10-11T10:31:24-03:00",
       "motivo": "a tela do pedido não carregou os itens (veja debug/)",
       "avisado_em": "2026-10-10T12:51:25-03:00"
     },

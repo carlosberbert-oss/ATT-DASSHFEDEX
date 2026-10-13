@@ -1429,21 +1429,26 @@
       "arrangement": "FITLOG TRANSPORTES E LOGISTICA LTDA - 2026-10-02 10:53:45",
       "itens": 1,
       "task": "https://zecore.zebrands.mx/app/delivery-task/d9f408805b"
-    }
-  },
-  "atualizado_em": "2026-10-13T08:21:47-03:00",
-  "problemas": {
-    "SAL-ORD-260827065203b0|112705": {
-      "vezes": 44,
-      "ultima": "2026-10-13T07:11:11-03:00",
-      "motivo": "nenhum item pendente da NF 112705 neste pedido",
-      "avisado_em": "2026-10-12T13:52:55-03:00"
     },
     "FREE-SAL-ORD-2610060b76278f|116874": {
-      "vezes": 43,
-      "ultima": "2026-10-13T07:11:40-03:00",
-      "motivo": "a tela do pedido não carregou os itens (veja debug/)",
-      "avisado_em": "2026-10-12T16:02:01-03:00"
+      "data": "2026-10-13T09:22:09-03:00",
+      "sales_order": "FREE-SAL-ORD-2610060b76278f",
+      "nf": "116874",
+      "carrier": "Fitlog",
+      "status_transportadora": "MERCADORIA ENTREGUE",
+      "master_guide": "35261042418313000104550010001168741373877114",
+      "arrangement": "FITLOG TRANSPORTES E LOGISTICA LTDA - 2026-10-07 08:46:24",
+      "itens": 2,
+      "task": "https://zecore.zebrands.mx/app/delivery-task/43222ca0d3"
+    }
+  },
+  "atualizado_em": "2026-10-13T09:22:09-03:00",
+  "problemas": {
+    "SAL-ORD-260827065203b0|112705": {
+      "vezes": 45,
+      "ultima": "2026-10-13T09:21:22-03:00",
+      "motivo": "nenhum item pendente da NF 112705 neste pedido",
+      "avisado_em": "2026-10-12T13:52:55-03:00"
     },
     "FREE-SAL-ORD-261007fd3fab14|117001": {
       "vezes": 3,

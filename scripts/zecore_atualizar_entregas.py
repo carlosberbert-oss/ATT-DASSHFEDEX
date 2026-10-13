@@ -511,8 +511,18 @@ def fazer_login(page, usuario, senha):
 
 # ── Etapa: abrir o pedido e pegar Master Guide + Arrangement ────
 
+def url_shipping_core(sales_order):
+    """Endereço da tela do pedido no Zecore. Muda conforme o tipo:
+      pedido normal → Sales Order-SAL-ORD-...-shipping
+      free sale     → Free Sales Order Request-FREE-SAL-ORD-...-shipping
+    """
+    so = str(sales_order or "").strip()
+    tipo = "Free%20Sales%20Order%20Request" if so.upper().startswith("FREE-") else "Sales%20Order"
+    return f"{ZECORE_BASE}/app/shipping-core/{tipo}-{so}-shipping"
+
+
 def abrir_pedido(page, sales_order):
-    url = f"{ZECORE_BASE}/app/shipping-core/Sales%20Order-{sales_order}-shipping"
+    url = url_shipping_core(sales_order)
     log(f"Abrindo {sales_order}")
     page.goto(url, wait_until="domcontentloaded", timeout=TIMEOUT_MS)
     page.wait_for_timeout(4000)

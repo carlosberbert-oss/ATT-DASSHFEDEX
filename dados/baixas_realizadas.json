@@ -1756,7 +1756,7 @@
       "task": "https://zecore.zebrands.mx/app/delivery-task/b5baf41094"
     }
   },
-  "atualizado_em": "2026-10-14T11:31:15-03:00",
+  "atualizado_em": "2026-10-14T12:42:22-03:00",
   "problemas": {
     "SAL-ORD-260827065203b0|112705": {
       "vezes": 57,
@@ -1775,6 +1775,12 @@
       "ultima": "2026-10-14T11:11:49-03:00",
       "motivo": "Depois de salvar o botão não virou Submit — veja debug/",
       "avisado_em": "2026-10-14T11:11:49-03:00"
+    },
+    "SAL-ORD-261003f80170b2|116584": {
+      "vezes": 1,
+      "ultima": "2026-10-14T12:42:21-03:00",
+      "motivo": "Confirmei o Submit mas não consegui verificar que foi aceito. Confira o documento antes de rodar de novo — veja debug/",
+      "avisado_em": "2026-10-14T12:42:21-03:00"
     }
   }
 }

@@ -190,28 +190,43 @@ def definir_data(page, dia, qs):
         page.wait_for_timeout(2000)
         controle.wait_for(state="visible", timeout=TIMEOUT_PADRAO_MS)
 
-    for i, nome in ((0, "início"), (1, "término")):
+    # Primeiro a data de TÉRMINO, depois a de INÍCIO: se o início for
+    # preenchido antes, por um instante ele fica depois do término antigo,
+    # o campo vira "inválido" e o QuickSight abre um aviso por cima.
+    for i, nome in ((1, "término"), (0, "início")):
         campo = controle.locator(f"input[data-automation-id='date_picker_{i}']").first
         if campo.count() == 0:
             qs.salvar_debug(page, "campos_data_nao_encontrados")
             raise RuntimeError(f"Não achei o campo de data de {nome} do controle '{CONTROLE_DATA}'")
-        campo.click()
-        campo.press("Control+A")
-        campo.press("Backspace")
-        campo.type(texto, delay=60)
-        campo.press("Enter")
+        fechar_popovers(page)
+        # focus + teclado em vez de clique: um calendário/aviso aberto por
+        # cima não atrapalha
+        campo.focus()
+        page.keyboard.press("Control+A")
+        page.keyboard.press("Backspace")
+        page.keyboard.type(texto, delay=60)
+        page.keyboard.press("Tab")
         page.wait_for_timeout(1500)
+        fechar_popovers(page)
         valor = (campo.input_value() or "").strip()
         if valor != texto:
-            # 2ª tentativa com fill (o campo é um input de texto do Material UI)
             campo.fill(texto)
-            campo.press("Tab")
+            campo.dispatch_event("change")
+            campo.dispatch_event("blur")
             page.wait_for_timeout(1500)
+            fechar_popovers(page)
             valor = (campo.input_value() or "").strip()
         log(f"  data de {nome}: {valor}")
         if valor != texto:
             qs.salvar_debug(page, "data_nao_aceita")
             raise RuntimeError(f"O campo de data de {nome} ficou com '{valor}' em vez de '{texto}'")
+
+    # Conferência final dos dois campos
+    for i, nome in ((0, "início"), (1, "término")):
+        v = (controle.locator(f"input[data-automation-id='date_picker_{i}']").first.input_value() or "").strip()
+        if v != texto:
+            qs.salvar_debug(page, "data_nao_aceita")
+            raise RuntimeError(f"Depois de preencher, a data de {nome} está '{v}' (esperado '{texto}')")
 
     page.keyboard.press("Escape")
     log("Aguardando os visuais atualizarem")
@@ -231,6 +246,20 @@ FILTROS_ESPERADOS = {
                                       "FITLOG TRANSPORTES E LOGISTICA LTDA"], "exato": False},
     "Shipping State":    {"valores": ["Delivered"], "exato": True},
 }
+
+
+def fechar_popovers(page):
+    """Fecha calendário/aviso do Material UI que fique aberto por cima
+    dos campos (ele intercepta os cliques)."""
+    for _ in range(3):
+        try:
+            pop = page.locator(".MuiPopover-root")
+            if pop.count() == 0 or not pop.first.is_visible():
+                return
+        except Exception:
+            return
+        page.keyboard.press("Escape")
+        page.wait_for_timeout(600)
 
 
 def conferir_filtros(page, qs):

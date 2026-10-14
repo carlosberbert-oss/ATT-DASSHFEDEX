@@ -307,34 +307,64 @@ def baixar_visual(page, qs):
       bloco  = [data-automation-id=grid-block] que contém o título
                h2[data-automation-id=analysis_visual_title_label]
                [data-automation-context="Total Volume to be delivered by week and % On Time"]
+      células= [data-automation-id^=sn-table-cell-]
       opção  = li[data-automation-id=dashboard_visual_dropdown_export] ("Exportar para CSV")
 
-    O botão de menu (⋮) só aparece com o mouse em cima do bloco. Os botões
-    candidatos são os <button> do próprio bloco (as células e cabeçalhos da
-    tabela são <div role=button>, então não entram), testados da direita
-    para a esquerda até abrir o menu que tem a opção de exportar."""
+    Ordem: 1) espera a tabela terminar de carregar (aparecerem células ou o
+    aviso de "sem dados"); 2) só então abre o menu ⋮ e exporta. Abrir o menu
+    antes da tabela carregar deixa "Exportar para CSV" desabilitado."""
     log(f"Procurando a tabela '{TITULO_VISUAL}'")
     titulo_sel = f"[data-automation-id='analysis_visual_title_label'][data-automation-context^='{TITULO_VISUAL}']"
-    bloco = page.locator(f"[data-automation-id='grid-block']:has({titulo_sel})").first
-    for _ in range(25):
+    sel_bloco = f"[data-automation-id='grid-block']:has({titulo_sel})"
+    celulas_sel = "[data-automation-id^='sn-table-cell-']"
+
+    def achar_bloco():
+        for _ in range(25):
+            b = page.locator(sel_bloco).first
+            try:
+                if b.count() > 0:
+                    b.scroll_into_view_if_needed(timeout=5000)
+                    return b
+            except Exception:
+                pass
+            page.mouse.wheel(0, 700)
+            page.wait_for_timeout(900)
+        return None
+
+    bloco = achar_bloco()
+    if bloco is None:
+        qs.salvar_debug(page, "tabela_raw_data_nao_encontrada")
+        raise RuntimeError(f"Não achei a tabela '{TITULO_VISUAL}'")
+
+    # 1) espera os dados da tabela (depois da troca da data ela recarrega)
+    log("Esperando a tabela carregar com o dia escolhido")
+    vazio_textos = ("Nenhum dado", "Sem dados", "No data", "Não há dados", "No hay datos")
+    inicio, estado = time.time(), None
+    while time.time() - inicio < 120:
+        bloco = page.locator(sel_bloco).first
         try:
-            if bloco.count() > 0:
-                bloco.scroll_into_view_if_needed(timeout=5000)
+            if bloco.locator(celulas_sel).count() > 0:
+                estado = "dados"
+                break
+            texto = bloco.inner_text(timeout=3000) or ""
+            if any(t.lower() in texto.lower() for t in vazio_textos):
+                estado = "vazio"
                 break
         except Exception:
             pass
-        page.mouse.wheel(0, 700)
-        page.wait_for_timeout(900)
-    if bloco.count() == 0:
-        qs.salvar_debug(page, "tabela_raw_data_nao_encontrada")
-        raise RuntimeError(f"Não achei a tabela '{TITULO_VISUAL}'")
-    page.wait_for_timeout(2500)
+        page.wait_for_timeout(3000)
+    if estado == "vazio":
+        log("A tabela RAW DATA está vazia para esse dia — nenhum item entregue")
+        return None
+    if estado is None:
+        qs.salvar_debug(page, "tabela_nao_carregou")
+        raise RuntimeError("A tabela RAW DATA não terminou de carregar em 2 minutos — veja debug/")
+    log("  tabela carregada")
+    page.wait_for_timeout(3000)
 
     opcao = page.locator("li[data-automation-id='dashboard_visual_dropdown_export']")
 
     def opcao_visivel():
-        """A opção de exportar que está visível agora (o QuickSight deixa
-        menus antigos escondidos na página)."""
         try:
             for k in range(opcao.count()):
                 o = opcao.nth(k)
@@ -344,87 +374,84 @@ def baixar_visual(page, qs):
             pass
         return None
 
-    def menu_abriu():
-        return opcao_visivel() is not None
+    def habilitada(o):
+        try:
+            return o is not None and (o.get_attribute("aria-disabled") or "false") != "true" and \
+                   "disabled" not in (o.get_attribute("class") or "").lower()
+        except Exception:
+            return False
 
-    def passar_mouse():
-        caixa = bloco.bounding_box()
+    def passar_mouse(b):
+        try:
+            caixa = b.bounding_box(timeout=5000)
+        except Exception:
+            caixa = None
         if caixa:
             page.mouse.move(caixa["x"] + caixa["width"] / 2, caixa["y"] + 20)
             page.wait_for_timeout(400)
             page.mouse.move(caixa["x"] + caixa["width"] - 60, caixa["y"] + 15)
             page.wait_for_timeout(900)
 
-    aberto = False
-    for tentativa in range(3):
-        passar_mouse()
+    # Botões que NÃO são o menu (maximizar, ordenar, filtros etc.)
+    nao_menu = ("maxim", "expand", "orden", "sort", "filtr", "foco", "focus", "favorit")
+
+    def abrir_menu():
+        b = achar_bloco()
+        if b is None:
+            return None
+        passar_mouse(b)
+        # 1º: o botão de menu do visual pelo identificador, se existir
         candidatos = []
-        botoes = bloco.locator("button")
+        direto = b.locator("[data-automation-id='analysis_visual_dropdown_menu_button'], button[aria-label*='Menu'], button[aria-label*='menu'], button[aria-label*='opções' i], button[aria-label*='options' i]")
+        for k in range(direto.count()):
+            candidatos.append((99999, direto.nth(k)))
+        # 2º: demais botões pequenos do bloco, da direita para a esquerda
+        botoes = b.locator("button")
+        outros = []
         for k in range(botoes.count()):
-            b = botoes.nth(k)
+            bt = botoes.nth(k)
             try:
-                if not b.is_visible(timeout=300):
+                if not bt.is_visible(timeout=300):
                     continue
-                cx = b.bounding_box()
+                rot = (bt.get_attribute("aria-label") or bt.get_attribute("title") or "").lower()
+                if any(n in rot for n in nao_menu):
+                    continue
+                cx = bt.bounding_box()
                 if cx and cx["width"] <= 60:
-                    candidatos.append((cx["x"], b))
+                    outros.append((cx["x"], bt))
             except Exception:
                 continue
-        candidatos.sort(key=lambda t: t[0], reverse=True)
-        log(f"  {len(candidatos)} botão(ões) na barra da tabela (tentativa {tentativa + 1})")
-        for x, b in candidatos[:8]:
+        outros.sort(key=lambda t: t[0], reverse=True)
+        for _, bt in candidatos + outros[:8]:
             try:
-                passar_mouse()
-                b.click(timeout=4000)
+                passar_mouse(b)
+                bt.click(timeout=4000)
                 page.wait_for_timeout(1200)
-                if menu_abriu():
-                    log(f"  menu da tabela aberto (botão em x={x:.0f})")
-                    aberto = True
-                    break
+                o = opcao_visivel()
+                if o is not None:
+                    return o
                 page.keyboard.press("Escape")
                 page.wait_for_timeout(500)
             except Exception:
-                try:
-                    page.keyboard.press("Escape")
-                except Exception:
-                    pass
-        if aberto:
+                continue
+        return None
+
+    # 2) abre o menu e exporta (até 6 tentativas, ~1 min)
+    alvo = None
+    for tentativa in range(6):
+        alvo = abrir_menu()
+        if alvo is not None and habilitada(alvo):
             break
-    if not aberto:
-        qs.salvar_debug(page, "menu_raw_data")
-        raise RuntimeError("Não consegui abrir o menu da tabela RAW DATA")
-
-    # "Exportar para CSV" fica desabilitado enquanto a tabela ainda carrega
-    # os dados — e continua desabilitado se a tabela estiver vazia.
-    def habilitada(o):
-        return o is not None and (o.get_attribute("aria-disabled") or "false") != "true" and \
-               "disabled" not in (o.get_attribute("class") or "").lower()
-
-    alvo, inicio = opcao_visivel(), time.time()
-    while not habilitada(alvo) and time.time() - inicio < 90:
-        log("  'Exportar para CSV' ainda desabilitado — esperando a tabela carregar")
-        page.keyboard.press("Escape")
+        if alvo is not None:
+            log("  'Exportar para CSV' ainda desabilitado — fechando o menu e esperando")
+            page.mouse.click(5, 5)          # fecha o menu clicando fora (sem Esc)
+        else:
+            log(f"  menu da tabela não abriu (tentativa {tentativa + 1})")
         page.wait_for_timeout(10_000)
-        passar_mouse()
-        for x, b in candidatos[:8]:
-            try:
-                b.click(timeout=4000)
-                page.wait_for_timeout(1200)
-                if menu_abriu():
-                    break
-                page.keyboard.press("Escape")
-            except Exception:
-                pass
-        alvo = opcao_visivel()
-
-    if not habilitada(alvo):
-        celulas = bloco.locator("[data-automation-id^='sn-table-cell-']").count()
-        page.keyboard.press("Escape")
-        if celulas == 0:
-            log("A tabela RAW DATA está vazia para esse dia — nenhum item entregue")
-            return None
-        qs.salvar_debug(page, "exportar_desabilitado")
-        raise RuntimeError("A opção 'Exportar para CSV' continuou desabilitada mesmo com a tabela preenchida — veja debug/")
+        alvo = None
+    if alvo is None:
+        qs.salvar_debug(page, "menu_raw_data")
+        raise RuntimeError("Não consegui abrir o menu da tabela RAW DATA com 'Exportar para CSV' habilitado — veja debug/")
 
     with page.expect_download(timeout=TIMEOUT_DOWNLOAD_MS) as info:
         alvo.click()

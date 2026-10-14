@@ -301,36 +301,92 @@ def conferir_filtros(page, qs):
 
 
 def baixar_visual(page, qs):
+    """Exporta a tabela RAW DATA.
+
+    Estrutura (confirmada no HTML):
+      bloco  = [data-automation-id=grid-block] que contém o título
+               h2[data-automation-id=analysis_visual_title_label]
+               [data-automation-context="Total Volume to be delivered by week and % On Time"]
+      opção  = li[data-automation-id=dashboard_visual_dropdown_export] ("Exportar para CSV")
+
+    O botão de menu (⋮) só aparece com o mouse em cima do bloco. Os botões
+    candidatos são os <button> do próprio bloco (as células e cabeçalhos da
+    tabela são <div role=button>, então não entram), testados da direita
+    para a esquerda até abrir o menu que tem a opção de exportar."""
     log(f"Procurando a tabela '{TITULO_VISUAL}'")
-    titulo = None
+    titulo_sel = f"[data-automation-id='analysis_visual_title_label'][data-automation-context^='{TITULO_VISUAL}']"
+    bloco = page.locator(f"[data-automation-id='grid-block']:has({titulo_sel})").first
     for _ in range(25):
-        cand = page.get_by_text(TITULO_VISUAL, exact=False)
-        for i in range(min(cand.count(), 5)):
-            el = cand.nth(i)
-            try:
-                if el.is_visible(timeout=800):
-                    el.scroll_into_view_if_needed(timeout=5000)
-                    page.wait_for_timeout(2000)
-                    titulo = el
-                    break
-            except Exception:
-                continue
-        if titulo:
-            break
+        try:
+            if bloco.count() > 0:
+                bloco.scroll_into_view_if_needed(timeout=5000)
+                break
+        except Exception:
+            pass
         page.mouse.wheel(0, 700)
         page.wait_for_timeout(900)
-    if not titulo:
+    if bloco.count() == 0:
         qs.salvar_debug(page, "tabela_raw_data_nao_encontrada")
         raise RuntimeError(f"Não achei a tabela '{TITULO_VISUAL}'")
+    page.wait_for_timeout(2500)
 
-    if not qs.abrir_menu_visual(page, titulo):
+    opcao = page.locator("li[data-automation-id='dashboard_visual_dropdown_export']")
+
+    def menu_abriu():
+        try:
+            return opcao.count() > 0 and opcao.first.is_visible()
+        except Exception:
+            return False
+
+    def passar_mouse():
+        caixa = bloco.bounding_box()
+        if caixa:
+            page.mouse.move(caixa["x"] + caixa["width"] / 2, caixa["y"] + 20)
+            page.wait_for_timeout(400)
+            page.mouse.move(caixa["x"] + caixa["width"] - 60, caixa["y"] + 15)
+            page.wait_for_timeout(900)
+
+    aberto = False
+    for tentativa in range(3):
+        passar_mouse()
+        candidatos = []
+        botoes = bloco.locator("button")
+        for k in range(botoes.count()):
+            b = botoes.nth(k)
+            try:
+                if not b.is_visible(timeout=300):
+                    continue
+                cx = b.bounding_box()
+                if cx and cx["width"] <= 60:
+                    candidatos.append((cx["x"], b))
+            except Exception:
+                continue
+        candidatos.sort(key=lambda t: t[0], reverse=True)
+        log(f"  {len(candidatos)} botão(ões) na barra da tabela (tentativa {tentativa + 1})")
+        for x, b in candidatos[:8]:
+            try:
+                passar_mouse()
+                b.click(timeout=4000)
+                page.wait_for_timeout(1200)
+                if menu_abriu():
+                    log(f"  menu da tabela aberto (botão em x={x:.0f})")
+                    aberto = True
+                    break
+                page.keyboard.press("Escape")
+                page.wait_for_timeout(500)
+            except Exception:
+                try:
+                    page.keyboard.press("Escape")
+                except Exception:
+                    pass
+        if aberto:
+            break
+    if not aberto:
         qs.salvar_debug(page, "menu_raw_data")
         raise RuntimeError("Não consegui abrir o menu da tabela RAW DATA")
 
     with page.expect_download(timeout=TIMEOUT_DOWNLOAD_MS) as info:
-        if not qs.clicar_exportar_csv(page):
-            qs.salvar_debug(page, "exportar_raw_data")
-            raise RuntimeError("Menu abriu, mas não achei 'Exportar para CSV'")
+        opcao.first.click()
         log("Exportando — o QuickSight prepara o arquivo antes de baixar")
     DIR_SAIDA.mkdir(exist_ok=True)
     destino = DIR_SAIDA / "entregues_raw_data.csv"

@@ -1,0 +1,57 @@
+name: Atualizar PEDIDOS ENTREGUES (BASE)
+
+on:
+  # Disparo externo pelo cron-job.org, TODO DIA às 12h (inclusive sábado e
+  # domingo), igual ao bot do QuickSight. Sem bloco "schedule" para não rodar
+  # em duplicidade. O workflow_dispatch também libera o botão "Run workflow",
+  # com a opção de reprocessar um dia específico.
+  workflow_dispatch:
+    inputs:
+      data:
+        description: "Dia de entrega a processar (AAAA-MM-DD). Vazio = ontem"
+        required: false
+        default: ""
+
+jobs:
+  entregues:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Instalar dependências
+        run: |
+          pip install -r requirements.txt
+          playwright install --with-deps chromium
+
+      - name: Exportar, completar e gravar na BASE
+        env:
+          QS_ACCOUNT: advanceanalytics
+          QS_USER: ${{ secrets.QS_USER }}
+          QS_PASSWORD: ${{ secrets.QS_PASSWORD }}
+          GOOGLE_CREDS_JSON: ${{ secrets.GOOGLE_CREDS_JSON }}
+          ZECORE_USER: ${{ secrets.ZECORE_USER }}
+          ZECORE_PASSWORD: ${{ secrets.ZECORE_PASSWORD }}
+          JAMEF_API_USER: ${{ secrets.JAMEF_API_USER }}
+          JAMEF_API_PASS: ${{ secrets.JAMEF_API_PASS }}
+        run: |
+          if [ -n "${{ github.event.inputs.data }}" ]; then
+            python scripts/entregues_export.py --data "${{ github.event.inputs.data }}"
+          else
+            python scripts/entregues_export.py
+          fi
+
+      - name: Guardar evidências em caso de falha
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: debug-entregues-${{ github.run_number }}
+          path: |
+            debug/
+            saida/
+          retention-days: 14

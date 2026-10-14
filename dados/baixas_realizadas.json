@@ -1626,13 +1626,24 @@
       "arrangement": "Mira Transportes - 2026-09-10 08:23:08",
       "itens": 1,
       "task": "https://zecore.zebrands.mx/app/delivery-task/3cea951a96"
+    },
+    "SAL-ORD-261006686b6f76|116900": {
+      "data": "2026-10-13T22:31:46-03:00",
+      "sales_order": "SAL-ORD-261006686b6f76",
+      "nf": "116900",
+      "carrier": "Fitlog",
+      "status_transportadora": "MERCADORIA ENTREGUE",
+      "master_guide": "35261042418313000104550010001169001374000838",
+      "arrangement": "FITLOG TRANSPORTES E LOGISTICA LTDA - 2026-10-07 08:46:24",
+      "itens": 1,
+      "task": "https://zecore.zebrands.mx/app/delivery-task/ce8f1e5e43"
     }
   },
-  "atualizado_em": "2026-10-13T21:21:40-03:00",
+  "atualizado_em": "2026-10-13T22:31:55-03:00",
   "problemas": {
     "SAL-ORD-260827065203b0|112705": {
-      "vezes": 50,
-      "ultima": "2026-10-13T20:21:20-03:00",
+      "vezes": 51,
+      "ultima": "2026-10-13T22:31:55-03:00",
       "motivo": "nenhum item pendente da NF 112705 neste pedido",
       "avisado_em": "2026-10-13T15:52:04-03:00"
     },

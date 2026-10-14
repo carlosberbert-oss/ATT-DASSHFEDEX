@@ -134,6 +134,8 @@ def exportar_quicksight(dia, headed=False):
             qs.fechar_popups(page)
             abrir_aba(page, qs)
             definir_data(page, dia, qs)
+            log("Conferindo os demais filtros")
+            conferir_filtros(page, qs)
             return baixar_visual(page, qs)
         except PWTimeout as e:
             qs.salvar_debug(page, "entregues_timeout")
@@ -165,30 +167,108 @@ def definir_data(page, dia, qs):
     """Coloca o mesmo dia nos dois campos do controle 'Fecha de Entrega'
     (formato YYYY/MM/DD). Os outros controles — Country, Reschedule Reason,
     Carrier, Shipping State — ficam como estão salvos para o usuário do bot;
-    o resultado é conferido depois do download."""
+    o resultado é conferido depois do download.
+
+    Estrutura do QuickSight (confirmada no HTML):
+      div[data-automation-id=sheet_control][data-automation-context="Fecha de Entrega"]
+        input[data-automation-id=date_picker_0]   → Data de início
+        input[data-automation-id=date_picker_1]   → Data de término
+    """
     texto = dia.strftime("%Y/%m/%d")
     log(f"Definindo '{CONTROLE_DATA}' = {texto} a {texto}")
-    rotulo = page.get_by_text(CONTROLE_DATA, exact=True).first
-    rotulo.wait_for(state="visible", timeout=TIMEOUT_PADRAO_MS)
-    bloco = rotulo.locator("xpath=ancestor::*[count(.//input) >= 2][1]")
-    campos = bloco.locator("input")
-    if campos.count() < 2:
-        qs.salvar_debug(page, "campos_data_nao_encontrados")
-        raise RuntimeError("Não achei os dois campos de data do controle 'Fecha de Entrega'")
-    for i in range(2):
-        campo = campos.nth(i)
+    controle = page.locator(f"[data-automation-id='sheet_control'][data-automation-context='{CONTROLE_DATA}']").first
+
+    # O painel "Controles" pode vir recolhido — abre se precisar
+    try:
+        controle.wait_for(state="visible", timeout=15_000)
+    except Exception:
+        log("Controles recolhidos — abrindo o painel")
+        try:
+            page.get_by_text("Controles", exact=True).first.click(timeout=5000)
+        except Exception:
+            page.get_by_text("Controls", exact=True).first.click(timeout=5000)
+        page.wait_for_timeout(2000)
+        controle.wait_for(state="visible", timeout=TIMEOUT_PADRAO_MS)
+
+    for i, nome in ((0, "início"), (1, "término")):
+        campo = controle.locator(f"input[data-automation-id='date_picker_{i}']").first
+        if campo.count() == 0:
+            qs.salvar_debug(page, "campos_data_nao_encontrados")
+            raise RuntimeError(f"Não achei o campo de data de {nome} do controle '{CONTROLE_DATA}'")
         campo.click()
         campo.press("Control+A")
-        campo.type(texto, delay=40)
+        campo.press("Backspace")
+        campo.type(texto, delay=60)
         campo.press("Enter")
-        page.wait_for_timeout(1200)
+        page.wait_for_timeout(1500)
+        valor = (campo.input_value() or "").strip()
+        if valor != texto:
+            # 2ª tentativa com fill (o campo é um input de texto do Material UI)
+            campo.fill(texto)
+            campo.press("Tab")
+            page.wait_for_timeout(1500)
+            valor = (campo.input_value() or "").strip()
+        log(f"  data de {nome}: {valor}")
+        if valor != texto:
+            qs.salvar_debug(page, "data_nao_aceita")
+            raise RuntimeError(f"O campo de data de {nome} ficou com '{valor}' em vez de '{texto}'")
+
     page.keyboard.press("Escape")
     log("Aguardando os visuais atualizarem")
-    page.wait_for_timeout(8000)
+    page.wait_for_timeout(10000)
     try:
         page.wait_for_load_state("networkidle", timeout=30_000)
     except Exception:
         pass
+
+
+# Filtros que precisam estar assim no QuickSight (o bot confere antes de exportar).
+# "exato": tem que ser exatamente esses valores; senão, basta conter todos.
+FILTROS_ESPERADOS = {
+    "Country":           {"valores": ["Brazil"], "exato": True},
+    "Reschedule Reason": {"valores": ["NULO", "String vazia", "Failed Attempt"], "exato": True},
+    "Carrier":           {"valores": ["Inhouse_Brasil", "JAMEF", "Mira Transportes",
+                                      "FITLOG TRANSPORTES E LOGISTICA LTDA"], "exato": False},
+    "Shipping State":    {"valores": ["Delivered"], "exato": True},
+}
+
+
+def conferir_filtros(page, qs):
+    """Lê o valor mostrado em cada controle e confere com o esperado.
+
+    Estrutura (confirmada no HTML do Carrier):
+      [data-automation-id=sheet_control_value][data-automation-context="<nome>"]
+      → texto "Inhouse_Brasil, JAMEF, Mira Transportes, FITLOG ..."
+
+    Se um filtro estiver diferente, o bot PARA sem exportar — exportar com
+    filtro errado gravaria dados errados na BASE. A correção é ajustar o
+    filtro no QuickSight logado com o usuário do bot (ele fica salvo)."""
+    problemas = []
+    for nome, regra in FILTROS_ESPERADOS.items():
+        el = page.locator(f"[data-automation-id='sheet_control_value'][data-automation-context='{nome}']").first
+        try:
+            el.wait_for(state="attached", timeout=10_000)
+            texto = (el.inner_text(timeout=5000) or "").strip()
+        except Exception:
+            log(f"  filtro '{nome}': não encontrado na tela — conferência pulada")
+            continue
+        atuais = {sem_acento(v) for v in re.split(r"\s*,\s*", texto) if v.strip()}
+        esperados = {sem_acento(v) for v in regra["valores"]}
+        faltam = esperados - atuais
+        sobram = atuais - esperados
+        ok = not faltam and (not regra["exato"] or not sobram)
+        log(f"  filtro '{nome}': {texto or '(vazio)'} {'✓' if ok else '✗'}")
+        if not ok:
+            detalhe = []
+            if faltam:
+                detalhe.append("faltam " + ", ".join(sorted(faltam)))
+            if sobram and regra["exato"]:
+                detalhe.append("sobram " + ", ".join(sorted(sobram)))
+            problemas.append(f"{nome} ({'; '.join(detalhe)})")
+    if problemas:
+        qs.salvar_debug(page, "filtros_diferentes")
+        raise RuntimeError("Filtros do QuickSight diferentes do esperado: " + " | ".join(problemas) +
+                           ". Ajuste no QuickSight logado com o usuário do bot e rode de novo. Nada foi gravado.")
 
 
 def baixar_visual(page, qs):

@@ -332,11 +332,20 @@ def baixar_visual(page, qs):
 
     opcao = page.locator("li[data-automation-id='dashboard_visual_dropdown_export']")
 
-    def menu_abriu():
+    def opcao_visivel():
+        """A opção de exportar que está visível agora (o QuickSight deixa
+        menus antigos escondidos na página)."""
         try:
-            return opcao.count() > 0 and opcao.first.is_visible()
+            for k in range(opcao.count()):
+                o = opcao.nth(k)
+                if o.is_visible():
+                    return o
         except Exception:
-            return False
+            pass
+        return None
+
+    def menu_abriu():
+        return opcao_visivel() is not None
 
     def passar_mouse():
         caixa = bloco.bounding_box()
@@ -385,8 +394,40 @@ def baixar_visual(page, qs):
         qs.salvar_debug(page, "menu_raw_data")
         raise RuntimeError("Não consegui abrir o menu da tabela RAW DATA")
 
+    # "Exportar para CSV" fica desabilitado enquanto a tabela ainda carrega
+    # os dados — e continua desabilitado se a tabela estiver vazia.
+    def habilitada(o):
+        return o is not None and (o.get_attribute("aria-disabled") or "false") != "true" and \
+               "disabled" not in (o.get_attribute("class") or "").lower()
+
+    alvo, inicio = opcao_visivel(), time.time()
+    while not habilitada(alvo) and time.time() - inicio < 90:
+        log("  'Exportar para CSV' ainda desabilitado — esperando a tabela carregar")
+        page.keyboard.press("Escape")
+        page.wait_for_timeout(10_000)
+        passar_mouse()
+        for x, b in candidatos[:8]:
+            try:
+                b.click(timeout=4000)
+                page.wait_for_timeout(1200)
+                if menu_abriu():
+                    break
+                page.keyboard.press("Escape")
+            except Exception:
+                pass
+        alvo = opcao_visivel()
+
+    if not habilitada(alvo):
+        celulas = bloco.locator("[data-automation-id^='sn-table-cell-']").count()
+        page.keyboard.press("Escape")
+        if celulas == 0:
+            log("A tabela RAW DATA está vazia para esse dia — nenhum item entregue")
+            return None
+        qs.salvar_debug(page, "exportar_desabilitado")
+        raise RuntimeError("A opção 'Exportar para CSV' continuou desabilitada mesmo com a tabela preenchida — veja debug/")
+
     with page.expect_download(timeout=TIMEOUT_DOWNLOAD_MS) as info:
-        opcao.first.click()
+        alvo.click()
         log("Exportando — o QuickSight prepara o arquivo antes de baixar")
     DIR_SAIDA.mkdir(exist_ok=True)
     destino = DIR_SAIDA / "entregues_raw_data.csv"
@@ -765,6 +806,9 @@ def main():
         sys.exit("Falta a variável GOOGLE_CREDS_JSON")
 
     caminho = Path(a.csv) if a.csv else exportar_quicksight(dia, a.headed)
+    if caminho is None:
+        log("Nenhum item entregue nesse dia. Nada a gravar.")
+        return
     itens = ler_csv(caminho, dia)
     if not itens:
         log("Nenhum item entregue nesse dia. Nada a gravar.")

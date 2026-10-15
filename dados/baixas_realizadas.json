@@ -2041,13 +2041,13 @@
       "task": "https://zecore.zebrands.mx/app/delivery-task/8b19fe2614"
     }
   },
-  "atualizado_em": "2026-10-15T19:22:06-03:00",
+  "atualizado_em": "2026-10-15T20:01:23-03:00",
   "problemas": {
     "SAL-ORD-260827065203b0|112705": {
-      "vezes": 71,
-      "ultima": "2026-10-15T17:52:17-03:00",
+      "vezes": 72,
+      "ultima": "2026-10-15T20:01:23-03:00",
       "motivo": "nenhum item pendente da NF 112705 neste pedido",
-      "avisado_em": "2026-10-14T18:02:06-03:00"
+      "avisado_em": "2026-10-15T20:01:23-03:00"
     },
     "FREE-SAL-ORD-261007fd3fab14|117001": {
       "vezes": 3,

@@ -2039,9 +2039,16 @@
       "arrangement": "Mira Transportes - 2026-10-06 08:23:09",
       "itens": 1,
       "task": "https://zecore.zebrands.mx/app/delivery-task/8b19fe2614"
+    },
+    "SAL-ORD-261002b15cc548|116576": {
+      "data": "2026-10-15T20:51:23-03:00",
+      "sales_order": "SAL-ORD-261002b15cc548",
+      "nf": "116576",
+      "carrier": "Fitlog",
+      "origem": "ja_tinha_baixa"
     }
   },
-  "atualizado_em": "2026-10-15T20:01:23-03:00",
+  "atualizado_em": "2026-10-15T20:51:23-03:00",
   "problemas": {
     "SAL-ORD-260827065203b0|112705": {
       "vezes": 72,
@@ -2060,12 +2067,6 @@
       "ultima": "2026-10-15T16:02:18-03:00",
       "motivo": "Confirmei o Submit mas não consegui verificar que foi aceito. Confira o documento antes de rodar de novo — veja debug/",
       "avisado_em": "2026-10-15T16:02:18-03:00"
-    },
-    "SAL-ORD-261002b15cc548|116576": {
-      "vezes": 1,
-      "ultima": "2026-10-15T18:42:04-03:00",
-      "motivo": "Confirmei o Submit mas não consegui verificar que foi aceito. Confira o documento antes de rodar de novo — veja debug/",
-      "avisado_em": "2026-10-15T18:42:04-03:00"
     }
   }
 }

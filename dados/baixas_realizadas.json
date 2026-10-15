@@ -1990,7 +1990,7 @@
       "task": "https://zecore.zebrands.mx/app/delivery-task/fc018c1468"
     }
   },
-  "atualizado_em": "2026-10-15T13:31:12-03:00",
+  "atualizado_em": "2026-10-15T14:41:59-03:00",
   "problemas": {
     "SAL-ORD-260827065203b0|112705": {
       "vezes": 69,
@@ -2003,6 +2003,12 @@
       "ultima": "2026-10-09T16:11:30-03:00",
       "motivo": "a tela do pedido não carregou os itens (veja debug/)",
       "avisado_em": "2026-10-09T11:51:48-03:00"
+    },
+    "SAL-ORD-2610083b98b6b8|117123": {
+      "vezes": 1,
+      "ultima": "2026-10-15T14:41:59-03:00",
+      "motivo": "Confirmei o Submit mas não consegui verificar que foi aceito. Confira o documento antes de rodar de novo — veja debug/",
+      "avisado_em": "2026-10-15T14:41:59-03:00"
     }
   }
 }

@@ -1922,9 +1922,42 @@
       "nf": "116723",
       "carrier": "Fitlog",
       "origem": "ja_tinha_baixa"
+    },
+    "SAL-ORD-260924bf2078e4|115884": {
+      "data": "2026-10-15T10:52:01-03:00",
+      "sales_order": "SAL-ORD-260924bf2078e4",
+      "nf": "115884",
+      "carrier": "Mira",
+      "status_transportadora": "MERCADORIA ENTREGUE",
+      "master_guide": "35260942418313000104550010001158841337848624",
+      "arrangement": "Mira Transportes - 2026-09-25 08:52:21",
+      "itens": 1,
+      "task": "https://zecore.zebrands.mx/app/delivery-task/8b00440699"
+    },
+    "SAL-ORD-261013ca6b6bc5|117630": {
+      "data": "2026-10-15T10:52:39-03:00",
+      "sales_order": "SAL-ORD-261013ca6b6bc5",
+      "nf": "117630",
+      "carrier": "Fitlog",
+      "status_transportadora": "MERCADORIA ENTREGUE",
+      "master_guide": "35261042418313000104550010001176301976790656",
+      "arrangement": "FITLOG TRANSPORTES E LOGISTICA LTDA - 2026-10-14 08:16:21",
+      "itens": 1,
+      "task": "https://zecore.zebrands.mx/app/delivery-task/6102fe7a79"
+    },
+    "SAL-ORD-2610059bba4c6e|116704": {
+      "data": "2026-10-15T10:53:16-03:00",
+      "sales_order": "SAL-ORD-2610059bba4c6e",
+      "nf": "116704",
+      "carrier": "Mira",
+      "status_transportadora": "MERCADORIA ENTREGUE",
+      "master_guide": "35261042418313000104550010001167041286669483",
+      "arrangement": "Mira Transportes - 2026-10-06 08:23:09",
+      "itens": 2,
+      "task": "https://zecore.zebrands.mx/app/delivery-task/f1b9e6075f"
     }
   },
-  "atualizado_em": "2026-10-15T10:31:21-03:00",
+  "atualizado_em": "2026-10-15T10:53:16-03:00",
   "problemas": {
     "SAL-ORD-260827065203b0|112705": {
       "vezes": 67,

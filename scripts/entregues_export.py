@@ -1039,6 +1039,127 @@ def gravar_base(linhas, sheet_id, gc, simular=False):
     return len(novas)
 
 
+# ── Modo completar valores (histórico) ──────────────────────────
+# Percorre a BASE e preenche VALOR FRETE / VALOR NF só onde estão em branco,
+# com as mesmas fontes do dia a dia. Não mexe em nenhuma outra coluna e não
+# acrescenta linhas. Pode rodar quantas vezes precisar: cada execução continua
+# de onde a anterior parou (só olha o que ainda está vazio).
+
+def _carrier_base(v):
+    t = sem_acento(v)
+    return "JAMEF" if t.startswith("JAMEF") else "FITLOG" if t.startswith("FITLOG") else \
+           "Mira" if t.startswith("MIRA") else "INHOUSE" if t.startswith("INHOUSE") else ""
+
+
+def completar_valores(gc, zc, sheet_id, desde, ate, tempo_max_min, simular=False):
+    import gspread.utils as gu
+    t0 = time.time()
+    fim_ok = lambda: time.time() - t0 < tempo_max_min * 60
+    aba = gc.open_by_key(sheet_id).worksheet(ABA_BASE)
+    todas = aba.get_all_values()
+    if not todas:
+        log("BASE vazia")
+        return
+    cab = [c.strip() for c in todas[0]]
+    novas_cols = [c for c in (COL_VALOR_FRETE, COL_VALOR_NF) if c not in cab]
+    if novas_cols and not simular:
+        if aba.col_count < len(cab) + len(novas_cols):
+            aba.add_cols(len(cab) + len(novas_cols) - aba.col_count)
+        aba.update(values=[novas_cols], range_name=gu.rowcol_to_a1(1, len(cab) + 1))
+        log(f"colunas criadas na BASE: {', '.join(novas_cols)}")
+    cab += novas_cols
+    ix = {c: i for i, c in enumerate(cab)}
+    for obrig in ("DELIVERED_DATE", "Transportadora", "NF", "DOCNAME", "SCI"):
+        if obrig not in ix:
+            raise RuntimeError(f"A BASE não tem a coluna {obrig}")
+    i_fr, i_vl = ix[COL_VALOR_FRETE], ix[COL_VALOR_NF]
+    g = lambda l, c: (l[ix[c]].strip() if ix[c] < len(l) else "")
+
+    # 1) linhas que precisam de valor, dentro do período (mais recentes primeiro)
+    alvo = []
+    for n_lin, l in enumerate(todas[1:], start=2):
+        d = data_iso(g(l, "DELIVERED_DATE"))
+        if not d or (desde and d < desde) or (ate and d > ate):
+            continue
+        car = _carrier_base(g(l, "Transportadora"))
+        fr = l[i_fr].strip() if i_fr < len(l) else ""
+        vl = l[i_vl].strip() if i_vl < len(l) else ""
+        precisa_fr = car in ("JAMEF", "FITLOG", "Mira") and not fr
+        precisa_vl = not vl
+        if not (precisa_fr or precisa_vl):
+            continue
+        alvo.append({"linha": n_lin, "data": d, "car": car, "nf": nf_numero(g(l, "NF")), "doc": g(l, "DOCNAME"),
+                     "sci": g(l, "SCI"), "fr": fr, "vl": vl, "precisa_fr": precisa_fr, "precisa_vl": precisa_vl})
+    alvo.sort(key=lambda a: a["data"], reverse=True)
+    periodo = f"{desde.strftime('%d/%m/%Y') if desde else 'início'} a {ate.strftime('%d/%m/%Y') if ate else 'hoje'}"
+    log(f"{len(alvo)} linha(s) da BASE sem valor no período {periodo}")
+    if not alvo:
+        return
+
+    # 2) relatórios Jamef e Mira (uma leitura só)
+    rel = valores_relatorios(gc)
+
+    # 3) para cada linha: frete/valor pela fonte da transportadora
+    senha_fitlog = os.environ.get("FITLOG_SENHA_XML") or SSW_SENHAS["FITLOG"]
+    xml_cache, sc_cache, inv_cache = {}, {}, {}
+    resultados, parou = [], False
+    for k, a in enumerate(alvo):
+        if not fim_ok():
+            parou = True
+            break
+        frete = valor = None
+        if a["car"] == "FITLOG" and a["nf"]:
+            if a["nf"] not in xml_cache:
+                try:
+                    xml_cache[a["nf"]] = xml_cte_fitlog(a["nf"], senha_fitlog)
+                except Exception:
+                    xml_cache[a["nf"]] = None
+                time.sleep(0.4)
+            if xml_cache[a["nf"]]:
+                frete, valor = xml_cache[a["nf"]]
+        elif a["car"] in ("JAMEF", "Mira") and (a["car"], a["nf"]) in rel:
+            frete, valor = rel[(a["car"], a["nf"])]
+        # valor da NF ainda vazio (Inhouse, ou NF fora do relatório): pelo Zecore
+        if valor is None and a["precisa_vl"] and zc is not None and a["doc"]:
+            if a["doc"] not in sc_cache:
+                sc = zc.shipping_core(a["doc"])
+                sc_cache[a["doc"]] = {it.get("name"): str(it.get("sales_invoice") or "") for it in ((sc or {}).get("items") or [])}
+                time.sleep(0.15)
+            valor = total_da_invoice(zc, sc_cache[a["doc"]].get(a["sci"]), inv_cache)
+        novo_fr = a["fr"] if a["fr"] or frete is None else round(frete, 2)
+        novo_vl = a["vl"] if a["vl"] or valor is None else round(valor, 2)
+        if (novo_fr != a["fr"]) or (novo_vl != a["vl"]):
+            resultados.append((a["linha"], novo_fr, novo_vl, a["car"]))
+        if (k + 1) % 200 == 0:
+            log(f"  {k + 1}/{len(alvo)} linhas olhadas · {len(resultados)} com valor novo")
+
+    cont = {}
+    for _, fr, vl, car in resultados:
+        c = cont.setdefault(car, [0, 0, 0])
+        c[0] += 1
+        c[1] += 1 if fr != "" else 0
+        c[2] += 1 if vl != "" else 0
+    log(f"{len(resultados)} linha(s) com valor novo — " + " · ".join(f"{k}: {v[0]} (frete {v[1]}, NF {v[2]})" for k, v in sorted(cont.items())))
+    if parou:
+        log(f"Tempo máximo de {tempo_max_min} min atingido em {k}/{len(alvo)} linhas — rode de novo para continuar de onde parou")
+    if simular:
+        log("Modo --simular: nada foi gravado")
+        for r in resultados[:5]:
+            log(f"  linha {r[0]}: frete {r[1]} · NF {r[2]}")
+        return
+
+    # 4) grava só as duas colunas, em lotes
+    col_fr, col_vl = gu.rowcol_to_a1(1, i_fr + 1)[:-1], gu.rowcol_to_a1(1, i_vl + 1)[:-1]
+    atualiz = []
+    for linha, fr, vl, _ in resultados:
+        atualiz.append({"range": f"{col_fr}{linha}", "values": [[fr]]})
+        atualiz.append({"range": f"{col_vl}{linha}", "values": [[vl]]})
+    for i in range(0, len(atualiz), 400):
+        aba.batch_update(atualiz[i:i + 400], value_input_option="USER_ENTERED")
+        time.sleep(1)
+    log(f"Gravado: {len(resultados)} linha(s) da BASE com frete/valor da NF")
+
+
 # ── Principal ───────────────────────────────────────────────────
 
 def main():
@@ -1048,10 +1169,31 @@ def main():
     ap.add_argument("--simular", action="store_true", help="faz tudo, mas não grava na planilha")
     ap.add_argument("--sem-rastreio", action="store_true", help="não consulta as transportadoras")
     ap.add_argument("--sem-valores", action="store_true", help="não busca frete e valor da NF")
+    ap.add_argument("--completar-valores", action="store_true",
+                    help="preenche VALOR FRETE/VALOR NF nas linhas antigas da BASE que estão em branco")
+    ap.add_argument("--desde", help="com --completar-valores: entregas a partir de AAAA-MM-DD (padrão: 90 dias)")
+    ap.add_argument("--ate", help="com --completar-valores: entregas até AAAA-MM-DD")
+    ap.add_argument("--tempo-max", type=int, default=25, help="com --completar-valores: minutos máximos (padrão 25)")
     ap.add_argument("--headed", action="store_true", help="mostra o navegador")
     a = ap.parse_args()
 
     hoje = dt.datetime.now(dt.timezone(dt.timedelta(hours=-3))).date()   # horário de Brasília
+
+    if a.completar_valores:
+        creds_json = os.environ.get("GOOGLE_CREDS_JSON")
+        if not creds_json:
+            sys.exit("Falta a variável GOOGLE_CREDS_JSON")
+        zu, zp = os.environ.get("ZECORE_USER"), os.environ.get("ZECORE_PASSWORD")
+        zc = Zecore(zu, zp, a.headed) if zu and zp else None
+        if zc is None:
+            log("Sem ZECORE_USER/ZECORE_PASSWORD — valor da NF do Inhouse fica em branco")
+        desde = dt.date.fromisoformat(a.desde) if a.desde else hoje - dt.timedelta(days=90)
+        ate = dt.date.fromisoformat(a.ate) if a.ate else None
+        log("Modo completar valores")
+        completar_valores(cliente_google(creds_json), zc, os.environ.get("ENTREGUES_SHEET_ID", SHEET_ID_PADRAO),
+                          desde, ate, a.tempo_max, a.simular)
+        log("Concluído")
+        return
     dia = dt.date.fromisoformat(a.data) if a.data else hoje - dt.timedelta(days=1)
     log(f"Pedidos entregues em {dia.strftime('%d/%m/%Y')}")
 

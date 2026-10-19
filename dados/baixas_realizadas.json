@@ -2320,9 +2320,42 @@
       "nf": "116720",
       "carrier": "Fitlog",
       "origem": "ja_tinha_baixa"
+    },
+    "SAL-ORD-2609137b32e234|116172": {
+      "data": "2026-10-19T11:02:31-03:00",
+      "sales_order": "SAL-ORD-2609137b32e234",
+      "nf": "116172",
+      "carrier": "Mira",
+      "status_transportadora": "MERCADORIA ENTREGUE",
+      "master_guide": "35260942418313000104550010001161721693547007",
+      "arrangement": "Mira Transportes - 2026-09-29 11:44:50",
+      "itens": 1,
+      "task": "https://zecore.zebrands.mx/app/delivery-task/12dda8d5cf"
+    },
+    "SAL-ORD-2609137b32e234|116464": {
+      "data": "2026-10-19T11:03:07-03:00",
+      "sales_order": "SAL-ORD-2609137b32e234",
+      "nf": "116464",
+      "carrier": "Mira",
+      "status_transportadora": "MERCADORIA ENTREGUE",
+      "master_guide": "35261042418313000104550010001164641949798407",
+      "arrangement": "Mira Transportes - 2026-10-02 10:57:49",
+      "itens": 1,
+      "task": "https://zecore.zebrands.mx/app/delivery-task/24e16c24af"
+    },
+    "SAL-ORD-261005bef7df8e|116705": {
+      "data": "2026-10-19T11:03:44-03:00",
+      "sales_order": "SAL-ORD-261005bef7df8e",
+      "nf": "116705",
+      "carrier": "Mira",
+      "status_transportadora": "MERCADORIA ENTREGUE",
+      "master_guide": "35261042418313000104550010001167051286700612",
+      "arrangement": "Mira Transportes - 2026-10-06 08:23:09",
+      "itens": 2,
+      "task": "https://zecore.zebrands.mx/app/delivery-task/731064e281"
     }
   },
-  "atualizado_em": "2026-10-19T10:31:18-03:00",
+  "atualizado_em": "2026-10-19T11:04:19-03:00",
   "problemas": {
     "SAL-ORD-260827065203b0|112705": {
       "vezes": 111,
@@ -2337,8 +2370,8 @@
       "avisado_em": "2026-10-15T16:02:18-03:00"
     },
     "SAL-ORD-2610104d6fd566|117288": {
-      "vezes": 31,
-      "ultima": "2026-10-19T08:51:47-03:00",
+      "vezes": 32,
+      "ultima": "2026-10-19T11:04:19-03:00",
       "motivo": "Locator.click: Timeout 30000ms exceeded.\nCall log:\n  - waiting for locator(\".grid-row[data-idx]\").first.locator(\".btn-open-row\").first\n    - locator resolved to <div class=\"btn-open-row\">…</div>\n  - a",
       "avisado_em": "2026-10-18T19:51:53-03:00"
     },

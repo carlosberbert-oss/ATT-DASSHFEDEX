@@ -60,6 +60,11 @@ SHEET_ID_PADRAO = "1GXxR37E_lCvJXDVE3nDP-IxMiXNxv5XmMorXe8vMaYk"   # PEDIDOS ENT
 ABA_BASE = "BASE"
 
 ZECORE_URL = "https://zecore.zebrands.mx"
+DASHFEDEX_ID_PADRAO = "1RMM3Niaf3E9WVCN3NdfU1Cb4Fuz4VSJjaLUPBdrFldI"   # onde ficam os relatórios Jamef e Mira
+ABA_JAMEF_REL = "JamefRelatorio"     # relatório do Portal do Cliente (mesclado: guarda o histórico)
+ABA_MIRA_REL = "MiraRelatorio"       # relatório da Mira (CSV oficial)
+URL_SSW_SERVICO = "https://ssw.inf.br/2/servico"   # download do XML do CT-e (Fitlog)
+COL_VALOR_FRETE, COL_VALOR_NF = "VALOR FRETE", "VALOR NF"
 CNPJ = "42418313000104"
 JAMEF_API = "https://api.jamef.com.br"
 SSW_URL = "https://ssw.inf.br/2/resultSSW"
@@ -592,6 +597,33 @@ class Zecore:
         return None
 
 
+def total_da_invoice(zc, nome, cache):
+    """Valor total da NF no Zecore (Sales Invoice → grand_total)."""
+    if not nome:
+        return None
+    if nome in cache:
+        return cache[nome]
+    v = None
+    try:
+        r = zc.s.get(f"{ZECORE_URL}/api/resource/Sales Invoice/{requests.utils.quote(nome, safe='')}", timeout=60)
+        if r.status_code == 200:
+            d = r.json().get("data") or {}
+            v = d.get("grand_total") if d.get("grand_total") is not None else d.get("rounded_total")
+            v = float(v) if v is not None else None
+    except Exception:
+        v = None
+    cache[nome] = v
+    time.sleep(0.1)
+    return v
+
+
+def nf_da_chave(texto):
+    """A chave da NF-e (44 dígitos) traz o número da nota nas posições 26-34.
+    Ex.: .../35260742418313000104550010001064711006560589.xml → 106471"""
+    m = re.search(r"(\d{44})", str(texto or ""))
+    return str(int(m.group(1)[25:34])) if m else ""
+
+
 def dados_zecore(itens, zc):
     """Busca um Shipping Core por pedido e devolve, por SCI:
     criação, NF e endereço."""
@@ -606,8 +638,11 @@ def dados_zecore(itens, zc):
         criacao = data_iso(sc.get("creation"))
         for it in sc.get("items") or []:
             nf = re.sub(r"^\d+-", "", str(it.get("invoice_number") or "").strip())   # "1-106471" → "106471"
+            if not nf:
+                nf = nf_da_chave(it.get("sales_invoice_xml"))   # plano B: número dentro da chave da NF-e
             end = re.sub(r"-Shipping-\d+$", "", str(it.get("address") or "").strip())
-            por_sci[it.get("name")] = {"criacao": criacao, "nf": nf, "endereco": end}
+            por_sci[it.get("name")] = {"criacao": criacao, "nf": nf, "endereco": end,
+                                       "invoice": str(it.get("sales_invoice") or "").strip()}
         if i % 20 == 0:
             log(f"  {i}/{len(pedidos)} pedidos")
         time.sleep(0.15)
@@ -724,6 +759,179 @@ def rastrear(itens, por_sci, jamef):
     return out
 
 
+# ── 3b. Valor do frete e valor da NF ────────────────────────────
+# Mesma origem que a Dash fedex usa para as colunas V e W da Rastreamento:
+#   • Jamef  → relatório do Portal do Cliente: coluna X (valor do CT-e = frete)
+#              e W (valor da mercadoria); NF na coluna BC
+#   • Mira   → relatório da Mira: colunas "frete" e "valorMercadoria"
+#   • Fitlog → XML do CT-e no SSW (serviço id=52): vTPrest (frete) e vCarga (valor)
+#   • Inhouse→ sem frete de transportadora; valor da NF vem do Zecore
+# Os relatórios da Jamef e da Mira exigem login (MFA pelo Gmail / sessão da
+# Mira) e já são baixados todo dia pelas automações da Dash fedex; o bot lê
+# esses relatórios — não a coluna V da Rastreamento, que perde a nota quando
+# ela é entregue.
+
+def valor_num(v):
+    """'1.399,00', '186,15', '1,399.00' ou número → float (None se vazio)."""
+    if v is None or v == "":
+        return None
+    if isinstance(v, (int, float)):
+        return float(v)
+    s = re.sub(r"R\$|\s", "", str(v))
+    if not s:
+        return None
+    if "," in s and "." in s:
+        s = s.replace(".", "").replace(",", ".") if s.rfind(",") > s.rfind(".") else s.replace(",", "")
+    elif "," in s:
+        s = s.replace(",", ".")
+    elif "." in s:
+        partes = s.split(".")
+        if len(partes) > 2 or len(partes[-1]) == 3:
+            s = s.replace(".", "")
+    try:
+        return float(s)
+    except ValueError:
+        return None
+
+
+def nf_numero(v):
+    d = re.sub(r"\D", "", re.sub(r"-\d+$", "", str(v or "").strip()))
+    return str(int(d)) if d else ""
+
+
+def valores_relatorios(gc):
+    """{(transportadora, nf): (frete, valor)} dos relatórios Jamef e Mira."""
+    out = {}
+    try:
+        planilha = gc.open_by_key(os.environ.get("DASHFEDEX_SHEET_ID", DASHFEDEX_ID_PADRAO))
+    except Exception as e:
+        log(f"  não consegui abrir a planilha dos relatórios ({e}) — frete Jamef/Mira em branco")
+        return out
+    # Jamef: NF = BC (55), valor = W (23), frete = X (24)
+    try:
+        linhas = planilha.worksheet(ABA_JAMEF_REL).get_all_values()[1:]
+        for l in linhas:
+            if len(l) < 55:
+                continue
+            nf = nf_numero(l[54])
+            if nf:
+                out[("JAMEF", nf)] = (valor_num(l[23]), valor_num(l[22]))
+        log(f"  relatório Jamef: {sum(1 for k in out if k[0] == 'JAMEF')} NF(s)")
+    except Exception as e:
+        log(f"  relatório Jamef indisponível ({e})")
+    # Mira: colunas pelo nome do cabeçalho
+    try:
+        todas = planilha.worksheet(ABA_MIRA_REL).get_all_values()
+        cab = [c.strip().lower() for c in (todas[0] if todas else [])]
+        def col(*nomes):
+            for n_ in nomes:
+                if n_.lower() in cab:
+                    return cab.index(n_.lower())
+            for n_ in nomes:
+                for i, c in enumerate(cab):
+                    if n_.lower() in c:
+                        return i
+            return -1
+        i_nf, i_fr, i_vl = col("notaFiscal", "nota fiscal", "nf"), col("frete"), col("valorMercadoria", "valor mercadoria")
+        q = 0
+        for l in todas[1:]:
+            if i_nf < 0 or i_nf >= len(l):
+                continue
+            ult = (l[i_nf].split() or [""])[-1]          # "1 000110117" → 110117
+            nf = nf_numero(ult)
+            if nf:
+                out[("Mira", nf)] = (valor_num(l[i_fr]) if 0 <= i_fr < len(l) else None,
+                                     valor_num(l[i_vl]) if 0 <= i_vl < len(l) else None)
+                q += 1
+        log(f"  relatório Mira: {q} NF(s)")
+    except Exception as e:
+        log(f"  relatório Mira indisponível ({e})")
+    return out
+
+
+def xml_cte_fitlog(nf, senha):
+    """Baixa o XML do CT-e da Fitlog pelo SSW e devolve (frete, valor) ou None.
+    Mesmo caminho do Apps Script (_baixarXmlCteFitlog): formulário id=52 →
+    link 'ssw…?id=…' → arquivo (XML ou ZIP)."""
+    import io, zipfile
+    ua = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/131.0.0.0 Safari/537.36"
+    ses = requests.Session()
+    resp = ses.post(URL_SSW_SERVICO, data={"action": "xml", "id": "52", "cnpj": CNPJ, "password": senha, "nronf": nf},
+                    headers={"User-Agent": ua, "Origin": "https://ssw.inf.br", "Referer": "https://ssw.inf.br/2/servico?id=52"}, timeout=60)
+    for _ in range(4):
+        if resp.status_code != 200:
+            return None
+        corpo = resp.content
+        xml = None
+        if corpo[:2] == b"PK":
+            with zipfile.ZipFile(io.BytesIO(corpo)) as z:
+                for nome in z.namelist():
+                    t = z.read(nome).decode("utf-8", "ignore")
+                    if "<vTPrest>" in t:
+                        xml = t
+                        break
+        else:
+            t = corpo.decode("utf-8", "ignore")
+            if "<vTPrest>" in t:
+                xml = t
+        if xml:
+            chaves = re.findall(r"<infNFe>\s*<chave>(\d{44})</chave>", xml)
+            nfs = [str(int(c[25:34])) for c in chaves]
+            if nfs and str(int(nf)) not in nfs:
+                return None                       # CT-e de outra NF
+            fr = re.search(r"<vTPrest>([^<]*)</vTPrest>", xml)
+            vl = re.search(r"<vCarga>([^<]*)</vCarga>", xml)
+            return (float(fr.group(1)) if fr else None, float(vl.group(1)) if vl else None)
+        html = corpo.decode("utf-8", "ignore")
+        m = (re.search(r"href=[\"'](https?://[^\"']*ssw\d+\?id=[^\"']+)[\"']", html, re.I)
+             or re.search(r"href=[\"']([^\"']*ssw\d+\?id=[^\"']+)[\"']", html, re.I)
+             or re.search(r"(/cgi-local/ssw\d+\?id=[0-9A-Za-z]+)", html)
+             or re.search(r"(ssw\d+\?id=[0-9A-Za-z]+)", html))
+        if not m:
+            return None
+        link = m.group(1).replace("&amp;", "&")
+        if not link.lower().startswith("http"):
+            link = "https://ssw.inf.br" + link if link.startswith("/") else (
+                "https://ssw.inf.br/cgi-local/" + link if re.match(r"ssw\d+\?", link) else "https://ssw.inf.br/2/" + link)
+        resp = ses.get(link, headers={"User-Agent": ua, "Referer": URL_SSW_SERVICO}, timeout=60)
+    return None
+
+
+def buscar_valores(itens, por_sci, gc, zc):
+    """{SCI: (frete, valor_nf)}"""
+    log("Buscando valor do frete e valor da NF")
+    rel = valores_relatorios(gc) if gc else {}
+    senha_fitlog = os.environ.get("FITLOG_SENHA_XML") or SSW_SENHAS["FITLOG"]
+    xml_cache, inv_cache, out = {}, {}, {}
+    fitlog_nfs = sorted({(por_sci.get(r["SCI"]) or {}).get("nf") for r in itens if r["_carrier"] == "FITLOG"} - {None, ""})
+    if fitlog_nfs:
+        log(f"  Fitlog: baixando o XML do CT-e de {len(fitlog_nfs)} NF(s) no SSW")
+        for nf in fitlog_nfs:
+            try:
+                xml_cache[nf] = xml_cte_fitlog(nf, senha_fitlog)
+            except Exception as e:
+                xml_cache[nf] = None
+            time.sleep(0.4)
+    cont = {}
+    for r in itens:
+        z = por_sci.get(r["SCI"]) or {}
+        nf, car = z.get("nf", ""), r["_carrier"]
+        frete = valor = None
+        if car == "FITLOG" and xml_cache.get(nf):
+            frete, valor = xml_cache[nf]
+        elif car in ("JAMEF", "Mira") and (car, nf) in rel:
+            frete, valor = rel[(car, nf)]
+        if valor is None and zc is not None:                 # Inhouse ou sem relatório: valor da NF pelo Zecore
+            valor = total_da_invoice(zc, z.get("invoice"), inv_cache)
+        out[r["SCI"]] = (frete, valor)
+        c = cont.setdefault(car, [0, 0, 0])
+        c[0] += 1
+        c[1] += 1 if frete is not None else 0
+        c[2] += 1 if valor is not None else 0
+    log("  frete / valor NF por transportadora: " + " · ".join(f"{k} {v[1]}/{v[2]} de {v[0]}" for k, v in sorted(cont.items())))
+    return out
+
+
 # ── 4. Montagem das linhas da BASE ──────────────────────────────
 
 def cep_de(texto):
@@ -745,7 +953,7 @@ def fmt(d):
     return d.strftime("%d/%m/%Y") if d else ""
 
 
-def montar_linha(r, z, tr):
+def montar_linha(r, z, tr, val=(None, None)):
     entrega, prometido = r["_entrega"], data_iso(r.get("ORG_DELIVERY_DATE"))
     criacao = z.get("criacao")
     uf = uf_do_cep(cep_de(z.get("endereco")))
@@ -779,18 +987,36 @@ def montar_linha(r, z, tr):
         "MÊS": MESES[entrega.month - 1] if entrega else "",
         "DIAS": (entrega - criacao).days if (entrega and criacao) else "",
         "CEP": z.get("endereco", ""),
+        COL_VALOR_FRETE: "" if val[0] is None else round(val[0], 2),
+        COL_VALOR_NF: "" if val[1] is None else round(val[1], 2),
     }
 
 
 # ── 5. Gravação na BASE ─────────────────────────────────────────
 
-def gravar_base(linhas, sheet_id, creds_json, simular=False):
+def cliente_google(creds_json):
     import gspread
     from google.oauth2.service_account import Credentials
-
     creds = Credentials.from_service_account_info(json.loads(creds_json), scopes=["https://www.googleapis.com/auth/spreadsheets"])
-    aba = gspread.authorize(creds).open_by_key(sheet_id).worksheet(ABA_BASE)
+    return gspread.authorize(creds)
+
+
+def gravar_base(linhas, sheet_id, gc, simular=False):
+    aba = gc.open_by_key(sheet_id).worksheet(ABA_BASE)
     cab = [c.strip() for c in aba.row_values(1)]
+    # Colunas novas de valores: cria no fim do cabeçalho se ainda não existirem
+    novas_cols = [c for c in (COL_VALOR_FRETE, COL_VALOR_NF) if c not in cab]
+    if novas_cols:
+        if simular:
+            log(f"  (simulação) colunas que seriam criadas na BASE: {', '.join(novas_cols)}")
+        else:
+            if aba.col_count < len(cab) + len(novas_cols):
+                aba.add_cols(len(cab) + len(novas_cols) - aba.col_count)
+            import gspread.utils as gu
+            ini = gu.rowcol_to_a1(1, len(cab) + 1)
+            aba.update(values=[novas_cols], range_name=ini)
+            log(f"  colunas criadas na BASE: {', '.join(novas_cols)}")
+        cab += novas_cols
     if "SCI" not in cab:
         raise RuntimeError("A aba BASE não tem a coluna SCI no cabeçalho")
     col_sci = cab.index("SCI") + 1
@@ -821,6 +1047,7 @@ def main():
     ap.add_argument("--csv", help="usa este CSV em vez de exportar do QuickSight")
     ap.add_argument("--simular", action="store_true", help="faz tudo, mas não grava na planilha")
     ap.add_argument("--sem-rastreio", action="store_true", help="não consulta as transportadoras")
+    ap.add_argument("--sem-valores", action="store_true", help="não busca frete e valor da NF")
     ap.add_argument("--headed", action="store_true", help="mostra o navegador")
     a = ap.parse_args()
 
@@ -844,7 +1071,8 @@ def main():
     zu, zp = os.environ.get("ZECORE_USER"), os.environ.get("ZECORE_PASSWORD")
     if not zu or not zp:
         sys.exit("Faltam as variáveis ZECORE_USER e ZECORE_PASSWORD")
-    por_sci = dados_zecore(itens, Zecore(zu, zp, a.headed))
+    zc = Zecore(zu, zp, a.headed)
+    por_sci = dados_zecore(itens, zc)
 
     rastreio = {}
     if not a.sem_rastreio:
@@ -859,16 +1087,26 @@ def main():
             log("Sem JAMEF_API_USER/JAMEF_API_PASS — datas da Jamef ficam em branco")
         rastreio = rastrear(itens, por_sci, jamef)
 
-    linhas, sem_zecore = [], 0
+    gc = cliente_google(creds_json) if creds_json else None
+    valores = {} if a.sem_valores else buscar_valores(itens, por_sci, gc, zc)
+
+    linhas, sem_zecore, cont = [], [], {}
     for r in itens:
         z = por_sci.get(r["SCI"]) or {}
         if not z:
-            sem_zecore += 1
-        linhas.append(montar_linha(r, z, rastreio.get((r["_carrier"], z.get("nf", ""))) or {}))
+            sem_zecore.append(f"{r['DOCNAME']}/{r['SCI']}")
+        c = cont.setdefault(r["_carrier"], [0, 0])
+        c[0] += 1
+        c[1] += 1 if z.get("nf") else 0
+        linhas.append(montar_linha(r, z, rastreio.get((r["_carrier"], z.get("nf", ""))) or {}, valores.get(r["SCI"], (None, None))))
+    log("NF preenchida por transportadora: " + " · ".join(f"{k} {v[1]}/{v[0]}" for k, v in sorted(cont.items())))
     if sem_zecore:
-        log(f"Atenção: {sem_zecore} item(ns) sem dados do Zecore (NF/endereço em branco)")
+        log(f"Atenção: {len(sem_zecore)} item(ns) sem dados do Zecore (NF/endereço em branco): {', '.join(sem_zecore[:5])}{'…' if len(sem_zecore) > 5 else ''}")
 
-    gravar_base(linhas, os.environ.get("ENTREGUES_SHEET_ID", SHEET_ID_PADRAO), creds_json, a.simular)
+    if gc is None:
+        log("Sem GOOGLE_CREDS_JSON: nada foi gravado (simulação local)")
+    else:
+        gravar_base(linhas, os.environ.get("ENTREGUES_SHEET_ID", SHEET_ID_PADRAO), gc, a.simular)
     log("Concluído")
 
 

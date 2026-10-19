@@ -3,19 +3,33 @@ name: Atualizar PEDIDOS ENTREGUES (BASE)
 on:
   # Disparo externo pelo cron-job.org, TODO DIA às 12h (inclusive sábado e
   # domingo), igual ao bot do QuickSight. Sem bloco "schedule" para não rodar
-  # em duplicidade. O workflow_dispatch também libera o botão "Run workflow",
-  # com a opção de reprocessar um dia específico.
+  # em duplicidade. O workflow_dispatch também libera o botão "Run workflow".
   workflow_dispatch:
     inputs:
+      modo:
+        description: "O que fazer"
+        type: choice
+        options:
+          - entregas do dia
+          - completar valores (histórico)
+        default: entregas do dia
       data:
-        description: "Dia de entrega a processar (AAAA-MM-DD). Vazio = ontem"
+        description: "Entregas do dia: dia a processar (AAAA-MM-DD). Vazio = ontem"
+        required: false
+        default: ""
+      desde:
+        description: "Completar valores: a partir de (AAAA-MM-DD). Vazio = últimos 90 dias"
+        required: false
+        default: ""
+      ate:
+        description: "Completar valores: até (AAAA-MM-DD). Vazio = hoje"
         required: false
         default: ""
 
 jobs:
   entregues:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 35
 
     steps:
       - uses: actions/checkout@v4
@@ -29,7 +43,7 @@ jobs:
           pip install -r requirements.txt
           playwright install --with-deps chromium
 
-      - name: Exportar, completar e gravar na BASE
+      - name: Rodar
         env:
           QS_ACCOUNT: advanceanalytics
           QS_USER: ${{ secrets.QS_USER }}
@@ -39,9 +53,18 @@ jobs:
           ZECORE_PASSWORD: ${{ secrets.ZECORE_PASSWORD }}
           JAMEF_API_USER: ${{ secrets.JAMEF_API_USER }}
           JAMEF_API_PASS: ${{ secrets.JAMEF_API_PASS }}
+          MODO: ${{ github.event.inputs.modo }}
+          DATA: ${{ github.event.inputs.data }}
+          DESDE: ${{ github.event.inputs.desde }}
+          ATE: ${{ github.event.inputs.ate }}
         run: |
-          if [ -n "${{ github.event.inputs.data }}" ]; then
-            python scripts/entregues_export.py --data "${{ github.event.inputs.data }}"
+          if [ "$MODO" = "completar valores (histórico)" ]; then
+            ARGS="--completar-valores --tempo-max 28"
+            [ -n "$DESDE" ] && ARGS="$ARGS --desde $DESDE"
+            [ -n "$ATE" ] && ARGS="$ARGS --ate $ATE"
+            python scripts/entregues_export.py $ARGS
+          elif [ -n "$DATA" ]; then
+            python scripts/entregues_export.py --data "$DATA"
           else
             python scripts/entregues_export.py
           fi

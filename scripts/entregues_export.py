@@ -65,6 +65,10 @@ ABA_JAMEF_REL = "JamefRelatorio"     # relatório do Portal do Cliente (mesclado
 ABA_MIRA_REL = "MiraRelatorio"       # relatório da Mira (CSV oficial)
 URL_SSW_SERVICO = "https://ssw.inf.br/2/servico"   # download do XML do CT-e (Fitlog)
 COL_VALOR_FRETE, COL_VALOR_NF = "VALOR FRETE", "VALOR NF"
+COL_LAT, COL_LNG = "LAT", "LNG"          # coordenadas do endereço (para os alfinetes do mapa)
+COLUNAS_NOVAS = (COL_VALOR_FRETE, COL_VALOR_NF, COL_LAT, COL_LNG)
+NOMINATIM_URL = "https://nominatim.openstreetmap.org/search"
+NOMINATIM_UA = "PainelLogisticaLuuna/1.0 (logistica@zeb.mx)"   # o Nominatim exige identificar quem consulta
 CNPJ = "42418313000104"
 JAMEF_API = "https://api.jamef.com.br"
 SSW_URL = "https://ssw.inf.br/2/resultSSW"
@@ -932,6 +936,141 @@ def buscar_valores(itens, por_sci, gc, zc):
     return out
 
 
+# ── 3c. Coordenadas do endereço ─────────────────────────────────
+# Uma vez por endereço, aqui no robô — assim o mapa do painel já abre com
+# cada alfinete no lugar certo, para todo mundo, sem esperar a busca no
+# navegador. OpenStreetMap (Nominatim): no máximo 1 consulta por segundo.
+
+def consulta_endereco(txt):
+    s = str(txt or "").strip()
+    if not re.search(r"[A-Za-z]", s):
+        return None, None
+    m = re.search(r"(\d{5})-?(\d{3})(?!\d)", s)
+    cep = f"{m.group(1)}-{m.group(2)}" if m else ""
+    s = re.sub(r"N[úu]mero\s+interior:[^,]*,?", " ", s, flags=re.I)
+    s = re.sub(r"\d{5}-?\d{3}(?!\d)", " ", s)
+    partes = [p.strip() for p in s.split(",") if p.strip()]
+    # complemento atrapalha a busca (apto, bloco, sala…). Só sai quando é
+    # mesmo complemento: depois do número da rua, ou um trecho que começa com
+    # ele — "Rua Casa Branca" e o bairro "Casa Verde" ficam como estão.
+    compl = r"(APTO?|APARTAMENTO|APT|AP|BLOCO|BL|SALA|LOJA|TORRE|CONJ|CONJUNTO|FUNDOS|CASA\s*\d|LOTE\s*\d|QD\s*\d|QUADRA\s*\d)"
+    if partes:
+        m1 = re.match(r"^(.*?\d+)\s+" + compl + r"\b.*$", partes[0], flags=re.I)
+        if m1:
+            partes[0] = m1.group(1)
+    partes = [p for i, p in enumerate(partes) if i == 0 or not re.match(r"^" + compl + r"\b", p, flags=re.I)]
+    if partes:
+        mm = re.match(r"^(\d+)\s+(.*)$", partes[0])
+        if mm:
+            partes[0] = f"{mm.group(2)}, {mm.group(1)}"
+    q = re.sub(r"\s{2,}", " ", ", ".join(partes) + (f", {cep}" if cep else "") + ", Brasil")
+    return q, cep
+
+
+class Geocoder:
+    def __init__(self):
+        self.s = requests.Session()
+        self.s.headers.update({"User-Agent": NOMINATIM_UA, "Accept": "application/json", "Accept-Language": "pt-BR"})
+        self.ultimo, self.cache, self.feitas = 0.0, {}, 0
+
+    def _busca(self, params):
+        espera = 1.1 - (time.time() - self.ultimo)
+        if espera > 0:
+            time.sleep(espera)
+        self.ultimo = time.time()
+        self.feitas += 1
+        try:
+            r = self.s.get(NOMINATIM_URL, params={**params, "format": "json", "limit": 1, "countrycodes": "br"}, timeout=30)
+            if r.status_code == 200 and r.json():
+                h = r.json()[0]
+                return round(float(h["lat"]), 6), round(float(h["lon"]), 6)
+        except Exception:
+            pass
+        return None
+
+    def coordenadas(self, endereco):
+        q, cep = consulta_endereco(endereco)
+        if not q:
+            return None
+        if q in self.cache:
+            return self.cache[q]
+        g = self._busca({"q": q})
+        if g is None and cep:                    # plano B: só pelo CEP
+            g = self._busca({"postalcode": cep, "country": "Brasil"})
+        self.cache[q] = g
+        return g
+
+
+def geocodificar_linhas(linhas, tempo_max_s=600):
+    """Preenche LAT/LNG nas linhas novas (uma consulta por endereço)."""
+    geo, t0, ok = Geocoder(), time.time(), 0
+    enderecos = sorted({l["CEP"] for l in linhas if l.get("CEP")})
+    log(f"Coordenadas: {len(enderecos)} endereço(s) para localizar")
+    achados = {}
+    for e in enderecos:
+        if time.time() - t0 > tempo_max_s:
+            log("  tempo máximo das coordenadas atingido — o resto fica para o modo completar")
+            break
+        achados[e] = geo.coordenadas(e)
+    for l in linhas:
+        g = achados.get(l.get("CEP"))
+        if g:
+            l[COL_LAT], l[COL_LNG] = f"{g[0]:.6f}", f"{g[1]:.6f}"     # texto com ponto: não vira data/número errado
+            ok += 1
+    log(f"  {ok} de {len(linhas)} item(ns) com coordenadas ({geo.feitas} consulta(s))")
+
+
+def completar_coordenadas(gc, sheet_id, desde, ate, tempo_max_min, simular=False):
+    """Preenche LAT/LNG nas linhas da BASE que têm endereço e ainda não têm coordenada."""
+    import gspread.utils as gu
+    t0 = time.time()
+    aba = gc.open_by_key(sheet_id).worksheet(ABA_BASE)
+    todas = aba.get_all_values()
+    cab = [c.strip() for c in todas[0]]
+    novas_cols = [c for c in COLUNAS_NOVAS if c not in cab]
+    if novas_cols and not simular:
+        if aba.col_count < len(cab) + len(novas_cols):
+            aba.add_cols(len(cab) + len(novas_cols) - aba.col_count)
+        aba.update(values=[novas_cols], range_name=gu.rowcol_to_a1(1, len(cab) + 1))
+        log(f"colunas criadas na BASE: {', '.join(novas_cols)}")
+    cab += novas_cols
+    ix = {c: i for i, c in enumerate(cab)}
+    g = lambda l, c: (l[ix[c]].strip() if ix[c] < len(l) else "")
+    alvo = {}
+    for n_lin, l in enumerate(todas[1:], start=2):
+        d = data_iso(g(l, "DELIVERED_DATE"))
+        if not d or (desde and d < desde) or (ate and d > ate):
+            continue
+        if g(l, COL_LAT) and g(l, COL_LNG):
+            continue
+        e = g(l, "CEP")
+        if e and re.search(r"[A-Za-z]", e):
+            alvo.setdefault(e, []).append((n_lin, d))
+    ordem = sorted(alvo, key=lambda e: max(d for _, d in alvo[e]), reverse=True)   # mais recentes primeiro
+    log(f"{sum(len(v) for v in alvo.values())} linha(s) sem coordenada · {len(ordem)} endereço(s) diferentes")
+    geo, atualiz, k = Geocoder(), [], 0
+    col_lat = gu.rowcol_to_a1(1, ix[COL_LAT] + 1)[:-1]
+    col_lng = gu.rowcol_to_a1(1, ix[COL_LNG] + 1)[:-1]
+    for k, e in enumerate(ordem):
+        if time.time() - t0 > tempo_max_min * 60:
+            log(f"Tempo máximo atingido em {k}/{len(ordem)} endereços — rode de novo para continuar")
+            break
+        c = geo.coordenadas(e)
+        if c:
+            for n_lin, _ in alvo[e]:
+                atualiz.append({"range": f"{col_lat}{n_lin}", "values": [[f"{c[0]:.6f}"]]})
+                atualiz.append({"range": f"{col_lng}{n_lin}", "values": [[f"{c[1]:.6f}"]]})
+        if (k + 1) % 100 == 0:
+            log(f"  {k + 1}/{len(ordem)} endereços consultados")
+    log(f"{len(atualiz) // 2} linha(s) com coordenadas novas")
+    if simular or not atualiz:
+        return
+    for i in range(0, len(atualiz), 400):
+        aba.batch_update(atualiz[i:i + 400], value_input_option="RAW")
+        time.sleep(1)
+    log("Coordenadas gravadas na BASE")
+
+
 # ── 4. Montagem das linhas da BASE ──────────────────────────────
 
 def cep_de(texto):
@@ -989,6 +1128,7 @@ def montar_linha(r, z, tr, val=(None, None)):
         "CEP": z.get("endereco", ""),
         COL_VALOR_FRETE: "" if val[0] is None else round(val[0], 2),
         COL_VALOR_NF: "" if val[1] is None else round(val[1], 2),
+        COL_LAT: "", COL_LNG: "",
     }
 
 
@@ -1005,7 +1145,7 @@ def gravar_base(linhas, sheet_id, gc, simular=False):
     aba = gc.open_by_key(sheet_id).worksheet(ABA_BASE)
     cab = [c.strip() for c in aba.row_values(1)]
     # Colunas novas de valores: cria no fim do cabeçalho se ainda não existirem
-    novas_cols = [c for c in (COL_VALOR_FRETE, COL_VALOR_NF) if c not in cab]
+    novas_cols = [c for c in COLUNAS_NOVAS if c not in cab]
     if novas_cols:
         if simular:
             log(f"  (simulação) colunas que seriam criadas na BASE: {', '.join(novas_cols)}")
@@ -1061,7 +1201,7 @@ def completar_valores(gc, zc, sheet_id, desde, ate, tempo_max_min, simular=False
         log("BASE vazia")
         return
     cab = [c.strip() for c in todas[0]]
-    novas_cols = [c for c in (COL_VALOR_FRETE, COL_VALOR_NF) if c not in cab]
+    novas_cols = [c for c in COLUNAS_NOVAS if c not in cab]
     if novas_cols and not simular:
         if aba.col_count < len(cab) + len(novas_cols):
             aba.add_cols(len(cab) + len(novas_cols) - aba.col_count)
@@ -1169,6 +1309,9 @@ def main():
     ap.add_argument("--simular", action="store_true", help="faz tudo, mas não grava na planilha")
     ap.add_argument("--sem-rastreio", action="store_true", help="não consulta as transportadoras")
     ap.add_argument("--sem-valores", action="store_true", help="não busca frete e valor da NF")
+    ap.add_argument("--sem-coordenadas", action="store_true", help="não localiza os endereços no mapa")
+    ap.add_argument("--completar-coordenadas", action="store_true",
+                    help="preenche LAT/LNG nas linhas antigas da BASE que têm endereço e estão sem coordenada")
     ap.add_argument("--completar-valores", action="store_true",
                     help="preenche VALOR FRETE/VALOR NF nas linhas antigas da BASE que estão em branco")
     ap.add_argument("--desde", help="com --completar-valores: entregas a partir de AAAA-MM-DD (padrão: 90 dias)")
@@ -1178,6 +1321,17 @@ def main():
     a = ap.parse_args()
 
     hoje = dt.datetime.now(dt.timezone(dt.timedelta(hours=-3))).date()   # horário de Brasília
+
+    if a.completar_coordenadas:
+        creds_json = os.environ.get("GOOGLE_CREDS_JSON")
+        if not creds_json:
+            sys.exit("Falta a variável GOOGLE_CREDS_JSON")
+        desde = dt.date.fromisoformat(a.desde) if a.desde else hoje - dt.timedelta(days=90)
+        ate = dt.date.fromisoformat(a.ate) if a.ate else None
+        log("Modo completar coordenadas")
+        completar_coordenadas(cliente_google(creds_json), os.environ.get("ENTREGUES_SHEET_ID", SHEET_ID_PADRAO), desde, ate, a.tempo_max, a.simular)
+        log("Concluído")
+        return
 
     if a.completar_valores:
         creds_json = os.environ.get("GOOGLE_CREDS_JSON")
@@ -1245,6 +1399,8 @@ def main():
     if sem_zecore:
         log(f"Atenção: {len(sem_zecore)} item(ns) sem dados do Zecore (NF/endereço em branco): {', '.join(sem_zecore[:5])}{'…' if len(sem_zecore) > 5 else ''}")
 
+    if not a.sem_coordenadas:
+        geocodificar_linhas(linhas)
     if gc is None:
         log("Sem GOOGLE_CREDS_JSON: nada foi gravado (simulação local)")
     else:

@@ -2293,7 +2293,7 @@
       "origem": "ja_tinha_baixa"
     }
   },
-  "atualizado_em": "2026-10-19T04:31:41-03:00",
+  "atualizado_em": "2026-10-19T05:31:57-03:00",
   "problemas": {
     "SAL-ORD-260827065203b0|112705": {
       "vezes": 109,
@@ -2320,8 +2320,8 @@
       "avisado_em": "2026-10-16T16:42:33-03:00"
     },
     "SAL-ORD-2610128dba6dac|117287": {
-      "vezes": 27,
-      "ultima": "2026-10-19T03:21:41-03:00",
+      "vezes": 28,
+      "ultima": "2026-10-19T05:31:57-03:00",
       "motivo": "Locator.click: Timeout 30000ms exceeded.\nCall log:\n  - waiting for locator(\".grid-row[data-idx]\").first.locator(\".btn-open-row\").first\n    - locator resolved to <div class=\"btn-open-row\">…</div>\n  - a",
       "avisado_em": "2026-10-18T23:01:46-03:00"
     }

@@ -12,17 +12,18 @@ on:
         options:
           - entregas do dia
           - completar valores (histórico)
+          - completar coordenadas (histórico)
         default: entregas do dia
       data:
         description: "Entregas do dia: dia a processar (AAAA-MM-DD). Vazio = ontem"
         required: false
         default: ""
       desde:
-        description: "Completar valores: a partir de (AAAA-MM-DD). Vazio = últimos 90 dias"
+        description: "Completar: a partir de (AAAA-MM-DD). Vazio = últimos 90 dias"
         required: false
         default: ""
       ate:
-        description: "Completar valores: até (AAAA-MM-DD). Vazio = hoje"
+        description: "Completar: até (AAAA-MM-DD). Vazio = hoje"
         required: false
         default: ""
 
@@ -58,7 +59,12 @@ jobs:
           DESDE: ${{ github.event.inputs.desde }}
           ATE: ${{ github.event.inputs.ate }}
         run: |
-          if [ "$MODO" = "completar valores (histórico)" ]; then
+          if [ "$MODO" = "completar coordenadas (histórico)" ]; then
+            ARGS="--completar-coordenadas --tempo-max 28"
+            [ -n "$DESDE" ] && ARGS="$ARGS --desde $DESDE"
+            [ -n "$ATE" ] && ARGS="$ARGS --ate $ATE"
+            python scripts/entregues_export.py $ARGS
+          elif [ "$MODO" = "completar valores (histórico)" ]; then
             ARGS="--completar-valores --tempo-max 28"
             [ -n "$DESDE" ] && ARGS="$ARGS --desde $DESDE"
             [ -n "$ATE" ] && ARGS="$ARGS --ate $ATE"

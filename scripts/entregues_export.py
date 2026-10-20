@@ -644,7 +644,7 @@ def dados_zecore(itens, zc):
             nf = re.sub(r"^\d+-", "", str(it.get("invoice_number") or "").strip())   # "1-106471" → "106471"
             if not nf:
                 nf = nf_da_chave(it.get("sales_invoice_xml"))   # plano B: número dentro da chave da NF-e
-            end = re.sub(r"-Shipping-\d+$", "", str(it.get("address") or "").strip())
+            end = re.sub(r"\s*-\s*Shipping(-\d+)?\s*$", "", str(it.get("address") or "").strip(), flags=re.I)
             por_sci[it.get("name")] = {"criacao": criacao, "nf": nf, "endereco": end,
                                        "invoice": str(it.get("sales_invoice") or "").strip()}
         if i % 20 == 0:
@@ -942,7 +942,7 @@ def buscar_valores(itens, por_sci, gc, zc):
 # navegador. OpenStreetMap (Nominatim): no máximo 1 consulta por segundo.
 
 def consulta_endereco(txt):
-    s = str(txt or "").strip()
+    s = re.sub(r"\s*-\s*Shipping(-\d+)?\s*$", "", str(txt or "").strip(), flags=re.I)
     if not re.search(r"[A-Za-z]", s):
         return None, None
     m = re.search(r"(\d{5})-?(\d{3})(?!\d)", s)

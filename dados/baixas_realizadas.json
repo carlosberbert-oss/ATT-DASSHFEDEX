@@ -2544,7 +2544,7 @@
       "task": "https://zecore.zebrands.mx/app/delivery-task/c0170c1b10"
     }
   },
-  "atualizado_em": "2026-10-20T09:52:37-03:00",
+  "atualizado_em": "2026-10-20T10:11:24-03:00",
   "problemas": {
     "SAL-ORD-260827065203b0|112705": {
       "vezes": 119,
@@ -2589,9 +2589,9 @@
       "avisado_em": "2026-10-20T00:11:32-03:00"
     },
     "SAL-ORD-260930b012a20e|116312": {
-      "vezes": 1,
-      "ultima": "2026-10-20T08:02:01-03:00",
-      "motivo": "Confirmei o Submit mas não consegui verificar que foi aceito. Confira o documento antes de rodar de novo — veja debug/",
+      "vezes": 2,
+      "ultima": "2026-10-20T10:11:24-03:00",
+      "motivo": "nenhum item pendente da NF 116312 neste pedido",
       "avisado_em": "2026-10-20T08:02:01-03:00"
     },
     "SAL-ORD-260928bad4046d|117292": {

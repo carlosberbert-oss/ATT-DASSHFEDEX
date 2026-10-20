@@ -2708,7 +2708,7 @@
       "origem": "ja_tinha_baixa"
     }
   },
-  "atualizado_em": "2026-10-20T18:21:13-03:00",
+  "atualizado_em": "2026-10-20T18:41:57-03:00",
   "problemas": {
     "SAL-ORD-260827065203b0|112705": {
       "vezes": 120,
@@ -2751,6 +2751,12 @@
       "ultima": "2026-10-20T10:11:24-03:00",
       "motivo": "nenhum item pendente da NF 116312 neste pedido",
       "avisado_em": "2026-10-20T08:02:01-03:00"
+    },
+    "SAL-ORD-261006bd5589c4|116899": {
+      "vezes": 1,
+      "ultima": "2026-10-20T18:41:57-03:00",
+      "motivo": "Confirmei o Submit mas não consegui verificar que foi aceito. Confira o documento antes de rodar de novo — veja debug/",
+      "avisado_em": "2026-10-20T18:41:57-03:00"
     }
   }
 }

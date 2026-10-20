@@ -2500,11 +2500,11 @@
       "origem": "ja_tinha_baixa"
     }
   },
-  "atualizado_em": "2026-10-20T06:41:37-03:00",
+  "atualizado_em": "2026-10-20T07:31:20-03:00",
   "problemas": {
     "SAL-ORD-260827065203b0|112705": {
-      "vezes": 117,
-      "ultima": "2026-10-20T05:11:16-03:00",
+      "vezes": 118,
+      "ultima": "2026-10-20T07:31:20-03:00",
       "motivo": "nenhum item pendente da NF 112705 neste pedido",
       "avisado_em": "2026-10-20T00:51:24-03:00"
     },

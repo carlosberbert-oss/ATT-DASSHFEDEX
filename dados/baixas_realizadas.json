@@ -2837,9 +2837,23 @@
       "nf": "117822",
       "carrier": "Fitlog",
       "origem": "ja_tinha_baixa"
+    },
+    "SAL-ORD-2610101ed6b76c|117247": {
+      "data": "2026-10-21T17:16:10-03:00",
+      "sales_order": "SAL-ORD-2610101ed6b76c",
+      "nf": "117247",
+      "carrier": "Fitlog",
+      "origem": "ja_tinha_baixa"
+    },
+    "SAL-ORD-2610178f70eafd|118220": {
+      "data": "2026-10-21T17:16:17-03:00",
+      "sales_order": "SAL-ORD-2610178f70eafd",
+      "nf": "118220",
+      "carrier": "Fitlog",
+      "origem": "ja_tinha_baixa"
     }
   },
-  "atualizado_em": "2026-10-21T17:07:07-03:00",
+  "atualizado_em": "2026-10-21T17:16:17-03:00",
   "problemas": {
     "SAL-ORD-260827065203b0|112705": {
       "vezes": 126,

@@ -2737,11 +2737,11 @@
       "task": "https://zecore.zebrands.mx/app/delivery-task/16f2ac77c5"
     }
   },
-  "atualizado_em": "2026-10-20T21:12:04-03:00",
+  "atualizado_em": "2026-10-20T22:41:13-03:00",
   "problemas": {
     "SAL-ORD-260827065203b0|112705": {
-      "vezes": 121,
-      "ultima": "2026-10-20T20:31:33-03:00",
+      "vezes": 122,
+      "ultima": "2026-10-20T22:41:13-03:00",
       "motivo": "nenhum item pendente da NF 112705 neste pedido",
       "avisado_em": "2026-10-20T00:51:24-03:00"
     },

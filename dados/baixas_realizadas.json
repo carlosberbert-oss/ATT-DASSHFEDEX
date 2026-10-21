@@ -2886,7 +2886,7 @@
       "task": "https://zecore.zebrands.mx/app/delivery-task/fee57357d3"
     }
   },
-  "atualizado_em": "2026-10-21T18:22:32-03:00",
+  "atualizado_em": "2026-10-21T19:14:33-03:00",
   "problemas": {
     "SAL-ORD-260827065203b0|112705": {
       "vezes": 127,
@@ -2937,38 +2937,38 @@
       "avisado_em": "2026-10-21T16:59:44-03:00"
     },
     "SAL-ORD-261013613769bc|118390": {
-      "vezes": 1,
-      "ultima": "2026-10-21T17:02:11-03:00",
+      "vezes": 2,
+      "ultima": "2026-10-21T19:11:36-03:00",
       "motivo": "Locator.click: Timeout 30000ms exceeded.\nCall log:\n  - waiting for locator(\".grid-row[data-idx]\").first.locator(\".btn-open-row\").first\n    - locator resolved to <div class=\"btn-open-row\">…</div>\n  - a",
       "avisado_em": "2026-10-21T17:02:11-03:00"
     },
     "SAL-ORD-260928a3600539|118211": {
-      "vezes": 1,
-      "ultima": "2026-10-21T17:03:23-03:00",
+      "vezes": 2,
+      "ultima": "2026-10-21T19:12:11-03:00",
       "motivo": "Locator.click: Timeout 30000ms exceeded.\nCall log:\n  - waiting for locator(\".grid-row[data-idx]\").nth(3).locator(\".btn-open-row\").first\n    - locator resolved to <div class=\"btn-open-row\">…</div>\n  - ",
       "avisado_em": "2026-10-21T17:03:23-03:00"
     },
     "SAL-ORD-2610027774a6e4|118384": {
-      "vezes": 1,
-      "ultima": "2026-10-21T17:03:59-03:00",
+      "vezes": 2,
+      "ultima": "2026-10-21T19:12:47-03:00",
       "motivo": "Locator.click: Timeout 30000ms exceeded.\nCall log:\n  - waiting for locator(\".grid-row[data-idx]\").first.locator(\".btn-open-row\").first\n    - locator resolved to <div class=\"btn-open-row\">…</div>\n  - a",
       "avisado_em": "2026-10-21T17:03:59-03:00"
     },
     "FREE-SAL-ORD-2610060b76278f|118395": {
-      "vezes": 1,
-      "ultima": "2026-10-21T17:04:34-03:00",
+      "vezes": 2,
+      "ultima": "2026-10-21T19:13:22-03:00",
       "motivo": "Locator.click: Timeout 30000ms exceeded.\nCall log:\n  - waiting for locator(\".grid-row[data-idx]\").first.locator(\".btn-open-row\").first\n    - locator resolved to <div class=\"btn-open-row\">…</div>\n  - a",
       "avisado_em": "2026-10-21T17:04:34-03:00"
     },
     "SAL-ORD-260928a3600539|118412": {
-      "vezes": 1,
-      "ultima": "2026-10-21T17:05:08-03:00",
+      "vezes": 2,
+      "ultima": "2026-10-21T19:13:57-03:00",
       "motivo": "Locator.click: Timeout 30000ms exceeded.\nCall log:\n  - waiting for locator(\".grid-row[data-idx]\").nth(3).locator(\".btn-open-row\").first\n    - locator resolved to <div class=\"btn-open-row\">…</div>\n  - ",
       "avisado_em": "2026-10-21T17:05:08-03:00"
     },
     "SAL-ORD-2610189adcebb1|118389": {
-      "vezes": 1,
-      "ultima": "2026-10-21T17:06:20-03:00",
+      "vezes": 2,
+      "ultima": "2026-10-21T19:14:33-03:00",
       "motivo": "Locator.click: Timeout 30000ms exceeded.\nCall log:\n  - waiting for locator(\".grid-row[data-idx]\").first.locator(\".btn-open-row\").first\n    - locator resolved to <div class=\"btn-open-row\">…</div>\n  - a",
       "avisado_em": "2026-10-21T17:06:20-03:00"
     }

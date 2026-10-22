@@ -3195,9 +3195,16 @@
       "nf": "117302",
       "carrier": "Mira",
       "origem": "ja_tinha_baixa"
+    },
+    "SAL-ORD-261011646f99ae|117244": {
+      "data": "2026-10-22T20:51:17-03:00",
+      "sales_order": "SAL-ORD-261011646f99ae",
+      "nf": "117244",
+      "carrier": "Mira",
+      "origem": "ja_tinha_baixa"
     }
   },
-  "atualizado_em": "2026-10-22T20:31:05-03:00",
+  "atualizado_em": "2026-10-22T20:51:17-03:00",
   "problemas": {
     "SAL-ORD-261007ae8f95c1|117004": {
       "vezes": 1,
@@ -3246,12 +3253,6 @@
       "ultima": "2026-10-22T20:01:56-03:00",
       "motivo": "Locator.click: Timeout 30000ms exceeded.\nCall log:\n  - waiting for locator(\".grid-row[data-idx]\").first.locator(\".btn-open-row\").first\n    - locator resolved to <div class=\"btn-open-row\">…</div>\n  - a",
       "avisado_em": "2026-10-22T17:51:33-03:00"
-    },
-    "SAL-ORD-261011646f99ae|117244": {
-      "vezes": 1,
-      "ultima": "2026-10-22T18:49:04-03:00",
-      "motivo": "Locator.click: Timeout 30000ms exceeded.\nCall log:\n  - waiting for locator(\".grid-row[data-idx]\").first.locator(\".btn-open-row\").first\n    - locator resolved to <div class=\"btn-open-row\">…</div>\n  - a",
-      "avisado_em": "2026-10-22T18:49:04-03:00"
     },
     "SAL-ORD-260930fb4b7a22|118404": {
       "vezes": 1,

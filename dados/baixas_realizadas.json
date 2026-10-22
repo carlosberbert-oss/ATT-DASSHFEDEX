@@ -3141,9 +3141,23 @@
       "arrangement": "FITLOG TRANSPORTES E LOGISTICA LTDA - 2026-10-13 08:27:43",
       "itens": 1,
       "task": "https://zecore.zebrands.mx/app/delivery-task/27cf189467"
+    },
+    "SAL-ORD-26100539bd75fe|118402": {
+      "data": "2026-10-22T17:21:09-03:00",
+      "sales_order": "SAL-ORD-26100539bd75fe",
+      "nf": "118402",
+      "carrier": "Fitlog",
+      "origem": "ja_tinha_baixa"
+    },
+    "SAL-ORD-26092859e77133|117253": {
+      "data": "2026-10-22T17:21:14-03:00",
+      "sales_order": "SAL-ORD-26092859e77133",
+      "nf": "117253",
+      "carrier": "Fitlog",
+      "origem": "ja_tinha_baixa"
     }
   },
-  "atualizado_em": "2026-10-22T17:01:49-03:00",
+  "atualizado_em": "2026-10-22T17:21:14-03:00",
   "problemas": {
     "SAL-ORD-261007ae8f95c1|117004": {
       "vezes": 1,
@@ -3186,18 +3200,6 @@
       "ultima": "2026-10-22T08:53:22-03:00",
       "motivo": "Confirmei o Submit mas não consegui verificar que foi aceito. Confira o documento antes de rodar de novo — veja debug/",
       "avisado_em": "2026-10-22T08:53:22-03:00"
-    },
-    "SAL-ORD-26100539bd75fe|118402": {
-      "vezes": 1,
-      "ultima": "2026-10-22T15:11:37-03:00",
-      "motivo": "Locator.click: Timeout 30000ms exceeded.\nCall log:\n  - waiting for locator(\".grid-row[data-idx]\").first.locator(\".btn-open-row\").first\n    - locator resolved to <div class=\"btn-open-row\">…</div>\n  - a",
-      "avisado_em": "2026-10-22T15:11:37-03:00"
-    },
-    "SAL-ORD-26092859e77133|117253": {
-      "vezes": 1,
-      "ultima": "2026-10-22T15:12:34-03:00",
-      "motivo": "Confirmei o Submit mas não consegui verificar que foi aceito. Confira o documento antes de rodar de novo — veja debug/",
-      "avisado_em": "2026-10-22T15:12:34-03:00"
     }
   }
 }

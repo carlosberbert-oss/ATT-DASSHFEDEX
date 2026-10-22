@@ -3052,7 +3052,7 @@
       "origem": "ja_tinha_baixa"
     }
   },
-  "atualizado_em": "2026-10-22T12:41:18-03:00",
+  "atualizado_em": "2026-10-22T13:12:05-03:00",
   "problemas": {
     "SAL-ORD-261001b9a3252a|116317": {
       "vezes": 1,
@@ -3107,6 +3107,12 @@
       "ultima": "2026-10-22T11:32:08-03:00",
       "motivo": "Locator.click: Timeout 30000ms exceeded.\nCall log:\n  - waiting for locator(\".grid-row[data-idx]\").first.locator(\".btn-open-row\").first\n    - locator resolved to <div class=\"btn-open-row\">…</div>\n  - a",
       "avisado_em": "2026-10-22T11:32:08-03:00"
+    },
+    "SAL-ORD-2610011fb84ee2|118403": {
+      "vezes": 1,
+      "ultima": "2026-10-22T13:12:05-03:00",
+      "motivo": "Locator.click: Timeout 30000ms exceeded.\nCall log:\n  - waiting for locator(\".grid-row[data-idx]\").first.locator(\".btn-open-row\").first\n    - locator resolved to <div class=\"btn-open-row\">…</div>\n  - a",
+      "avisado_em": "2026-10-22T13:12:05-03:00"
     }
   }
 }

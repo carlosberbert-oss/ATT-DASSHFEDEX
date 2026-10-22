@@ -2959,16 +2959,17 @@
       "nf": "118389",
       "carrier": "Fitlog",
       "origem": "ja_tinha_baixa"
+    },
+    "SAL-ORD-260827065203b0|112705": {
+      "data": "2026-10-21T22:41:09-03:00",
+      "sales_order": "SAL-ORD-260827065203b0",
+      "nf": "112705",
+      "carrier": "Fitlog",
+      "origem": "ja_tinha_baixa"
     }
   },
-  "atualizado_em": "2026-10-21T21:22:08-03:00",
+  "atualizado_em": "2026-10-21T22:41:09-03:00",
   "problemas": {
-    "SAL-ORD-260827065203b0|112705": {
-      "vezes": 128,
-      "ultima": "2026-10-21T20:31:12-03:00",
-      "motivo": "nenhum item pendente da NF 112705 neste pedido",
-      "avisado_em": "2026-10-21T03:01:18-03:00"
-    },
     "SAL-ORD-261001b9a3252a|116317": {
       "vezes": 1,
       "ultima": "2026-10-15T16:02:18-03:00",

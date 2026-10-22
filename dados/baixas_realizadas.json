@@ -3010,9 +3010,20 @@
       "arrangement": "FITLOG TRANSPORTES E LOGISTICA LTDA - 2026-10-14 08:16:21",
       "itens": 1,
       "task": "https://zecore.zebrands.mx/app/delivery-task/867f6b44da"
+    },
+    "SAL-ORD-261010b9e09682|117255": {
+      "data": "2026-10-22T11:31:33-03:00",
+      "sales_order": "SAL-ORD-261010b9e09682",
+      "nf": "117255",
+      "carrier": "Fitlog",
+      "status_transportadora": "MERCADORIA ENTREGUE",
+      "master_guide": "35261042418313000104550010001172551891359370",
+      "arrangement": "FITLOG TRANSPORTES E LOGISTICA LTDA - 2026-10-13 08:27:43",
+      "itens": 1,
+      "task": "https://zecore.zebrands.mx/app/delivery-task/eaee25553a"
     }
   },
-  "atualizado_em": "2026-10-22T11:01:53-03:00",
+  "atualizado_em": "2026-10-22T11:32:08-03:00",
   "problemas": {
     "SAL-ORD-261001b9a3252a|116317": {
       "vezes": 1,
@@ -3067,6 +3078,12 @@
       "ultima": "2026-10-22T10:32:27-03:00",
       "motivo": "Locator.click: Timeout 30000ms exceeded.\nCall log:\n  - waiting for locator(\".grid-row[data-idx]\").first.locator(\".btn-open-row\").first\n    - locator resolved to <div class=\"btn-open-row\">…</div>\n  - a",
       "avisado_em": "2026-10-22T10:32:27-03:00"
+    },
+    "SAL-ORD-261007c09b888e|118391": {
+      "vezes": 1,
+      "ultima": "2026-10-22T11:32:08-03:00",
+      "motivo": "Locator.click: Timeout 30000ms exceeded.\nCall log:\n  - waiting for locator(\".grid-row[data-idx]\").first.locator(\".btn-open-row\").first\n    - locator resolved to <div class=\"btn-open-row\">…</div>\n  - a",
+      "avisado_em": "2026-10-22T11:32:08-03:00"
     }
   }
 }

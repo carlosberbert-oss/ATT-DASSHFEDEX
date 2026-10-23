@@ -3423,9 +3423,20 @@
       "nf": "118734",
       "carrier": "Fitlog",
       "origem": "ja_tinha_baixa"
+    },
+    "SAL-ORD-2610051dc2bdab|118215": {
+      "data": "2026-10-23T16:41:34-03:00",
+      "sales_order": "SAL-ORD-2610051dc2bdab",
+      "nf": "118215",
+      "carrier": "Fitlog",
+      "status_transportadora": "MERCADORIA ENTREGUE",
+      "master_guide": "35261042418313000104550010001182151410021139",
+      "arrangement": "FITLOG TRANSPORTES E LOGISTICA LTDA - 2026-10-19 08:30:02",
+      "itens": 1,
+      "task": "https://zecore.zebrands.mx/app/delivery-task/1a0da0c35b"
     }
   },
-  "atualizado_em": "2026-10-23T16:01:58-03:00",
+  "atualizado_em": "2026-10-23T16:41:35-03:00",
   "problemas": {
     "SAL-ORD-261007ae8f95c1|117004": {
       "vezes": 1,

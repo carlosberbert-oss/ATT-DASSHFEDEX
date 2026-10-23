@@ -3441,9 +3441,16 @@
       "nf": "118393",
       "carrier": "Fitlog",
       "origem": "ja_tinha_baixa"
+    },
+    "SAL-ORD-261020799b5780|118737": {
+      "data": "2026-10-23T17:11:04-03:00",
+      "sales_order": "SAL-ORD-261020799b5780",
+      "nf": "118737",
+      "carrier": "Fitlog",
+      "origem": "ja_tinha_baixa"
     }
   },
-  "atualizado_em": "2026-10-23T16:51:12-03:00",
+  "atualizado_em": "2026-10-23T17:11:04-03:00",
   "problemas": {
     "SAL-ORD-2610128dba6dac|117287": {
       "vezes": 31,
@@ -3486,12 +3493,6 @@
       "ultima": "2026-10-23T16:01:58-03:00",
       "motivo": "Locator.click: Timeout 30000ms exceeded.\nCall log:\n  - waiting for locator(\".grid-row[data-idx]\").nth(2).locator(\".btn-open-row\").first\n    - locator resolved to <div class=\"btn-open-row\">…</div>\n  - ",
       "avisado_em": "2026-10-23T13:53:53-03:00"
-    },
-    "SAL-ORD-261020799b5780|118737": {
-      "vezes": 1,
-      "ultima": "2026-10-23T15:02:00-03:00",
-      "motivo": "Locator.click: Timeout 30000ms exceeded.\nCall log:\n  - waiting for locator(\".grid-row[data-idx]\").first.locator(\".btn-open-row\").first\n    - locator resolved to <div class=\"btn-open-row\">…</div>\n  - a",
-      "avisado_em": "2026-10-23T15:02:00-03:00"
     }
   }
 }

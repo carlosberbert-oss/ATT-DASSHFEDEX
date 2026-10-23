@@ -3416,9 +3416,16 @@
       "nf": "118222",
       "carrier": "Fitlog",
       "origem": "ja_tinha_baixa"
+    },
+    "SAL-ORD-261020104e4ae9|118734": {
+      "data": "2026-10-23T16:01:23-03:00",
+      "sales_order": "SAL-ORD-261020104e4ae9",
+      "nf": "118734",
+      "carrier": "Fitlog",
+      "origem": "ja_tinha_baixa"
     }
   },
-  "atualizado_em": "2026-10-23T15:02:01-03:00",
+  "atualizado_em": "2026-10-23T16:01:58-03:00",
   "problemas": {
     "SAL-ORD-261007ae8f95c1|117004": {
       "vezes": 1,
@@ -3462,16 +3469,10 @@
       "motivo": "Confirmei o Submit mas não consegui verificar que foi aceito. Confira o documento antes de rodar de novo — veja debug/",
       "avisado_em": "2026-10-22T08:53:22-03:00"
     },
-    "SAL-ORD-261020104e4ae9|118734": {
-      "vezes": 1,
-      "ultima": "2026-10-23T13:53:18-03:00",
-      "motivo": "Confirmei o Submit mas não consegui verificar que foi aceito. Confira o documento antes de rodar de novo — veja debug/",
-      "avisado_em": "2026-10-23T13:53:18-03:00"
-    },
     "SAL-ORD-2610145e82c56f|117828": {
-      "vezes": 1,
-      "ultima": "2026-10-23T13:53:53-03:00",
-      "motivo": "Locator.click: Timeout 30000ms exceeded.\nCall log:\n  - waiting for locator(\".grid-row[data-idx]\").first.locator(\".btn-open-row\").first\n    - locator resolved to <div class=\"btn-open-row\">…</div>\n  - a",
+      "vezes": 2,
+      "ultima": "2026-10-23T16:01:58-03:00",
+      "motivo": "Locator.click: Timeout 30000ms exceeded.\nCall log:\n  - waiting for locator(\".grid-row[data-idx]\").nth(2).locator(\".btn-open-row\").first\n    - locator resolved to <div class=\"btn-open-row\">…</div>\n  - ",
       "avisado_em": "2026-10-23T13:53:53-03:00"
     },
     "SAL-ORD-2610098edea25e|118393": {

@@ -3343,9 +3343,42 @@
       "nf": "118405",
       "carrier": "Fitlog",
       "origem": "ja_tinha_baixa"
+    },
+    "SAL-ORD-2610117e28caf2|117256": {
+      "data": "2026-10-23T14:11:57-03:00",
+      "sales_order": "SAL-ORD-2610117e28caf2",
+      "nf": "117256",
+      "carrier": "Fitlog",
+      "status_transportadora": "MERCADORIA ENTREGUE",
+      "master_guide": "35261042418313000104550010001172561891360554",
+      "arrangement": "FITLOG TRANSPORTES E LOGISTICA LTDA - 2026-10-13 08:27:43",
+      "itens": 1,
+      "task": "https://zecore.zebrands.mx/app/delivery-task/b00197bff1"
+    },
+    "SAL-ORD-261013e4369542|117633": {
+      "data": "2026-10-23T14:12:33-03:00",
+      "sales_order": "SAL-ORD-261013e4369542",
+      "nf": "117633",
+      "carrier": "Fitlog",
+      "status_transportadora": "MERCADORIA ENTREGUE",
+      "master_guide": "35261042418313000104550010001176331976811850",
+      "arrangement": "FITLOG TRANSPORTES E LOGISTICA LTDA - 2026-10-14 08:16:21",
+      "itens": 1,
+      "task": "https://zecore.zebrands.mx/app/delivery-task/d07f0a10eb"
+    },
+    "SAL-ORD-2610220da58879|118874": {
+      "data": "2026-10-23T14:13:10-03:00",
+      "sales_order": "SAL-ORD-2610220da58879",
+      "nf": "118874",
+      "carrier": "Fitlog",
+      "status_transportadora": "MERCADORIA ENTREGUE",
+      "master_guide": "35261042418313000104550010001188741668452946",
+      "arrangement": "FITLOG TRANSPORTES E LOGISTICA LTDA - 2026-10-22 08:22:48",
+      "itens": 1,
+      "task": "https://zecore.zebrands.mx/app/delivery-task/c55d8926b3"
     }
   },
-  "atualizado_em": "2026-10-23T13:53:53-03:00",
+  "atualizado_em": "2026-10-23T14:13:10-03:00",
   "problemas": {
     "SAL-ORD-261007ae8f95c1|117004": {
       "vezes": 1,

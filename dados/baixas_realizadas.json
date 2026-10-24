@@ -3505,7 +3505,7 @@
       "task": "https://zecore.zebrands.mx/app/arrangement/FITLOG%20TRANSPORTES%20E%20LOGISTICA%20LTDA%20-%202026-10-13%2008%3A27%3A43"
     }
   },
-  "atualizado_em": "2026-10-24T10:41:30-03:00",
+  "atualizado_em": "2026-10-24T11:41:25-03:00",
   "problemas": {
     "SAL-ORD-2610128dba6dac|117287": {
       "vezes": 31,
@@ -3556,9 +3556,9 @@
       "avisado_em": "2026-10-23T19:31:48-03:00"
     },
     "SAL-ORD-261011a4c39b88|117245": {
-      "vezes": 1,
-      "ultima": "2026-10-24T09:32:09-03:00",
-      "motivo": "Confirmei o Submit mas não consegui verificar que foi aceito. Confira o documento antes de rodar de novo — veja debug/",
+      "vezes": 2,
+      "ultima": "2026-10-24T11:41:25-03:00",
+      "motivo": "nenhum item pendente da NF 117245 neste pedido",
       "avisado_em": "2026-10-24T09:32:09-03:00"
     }
   }

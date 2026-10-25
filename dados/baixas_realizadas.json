@@ -3505,7 +3505,7 @@
       "task": "https://zecore.zebrands.mx/app/arrangement/FITLOG%20TRANSPORTES%20E%20LOGISTICA%20LTDA%20-%202026-10-13%2008%3A27%3A43"
     }
   },
-  "atualizado_em": "2026-10-25T18:01:19-03:00",
+  "atualizado_em": "2026-10-25T19:11:36-03:00",
   "problemas": {
     "SAL-ORD-2610128dba6dac|117287": {
       "vezes": 31,
@@ -3550,8 +3550,8 @@
       "avisado_em": "2026-10-23T13:53:53-03:00"
     },
     "SAL-ORD-261006f93e00e5|118408": {
-      "vezes": 22,
-      "ultima": "2026-10-25T17:08:26-03:00",
+      "vezes": 23,
+      "ultima": "2026-10-25T19:11:36-03:00",
       "motivo": "Locator.click: Timeout 30000ms exceeded.\nCall log:\n  - waiting for locator(\".grid-row[data-idx]\").first.locator(\".btn-open-row\").first\n    - locator resolved to <div class=\"btn-open-row\">…</div>\n  - a",
       "avisado_em": "2026-10-24T21:32:12-03:00"
     },

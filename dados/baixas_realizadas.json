@@ -3665,7 +3665,7 @@
       "origem": "ja_tinha_baixa"
     }
   },
-  "atualizado_em": "2026-10-26T14:34:18-03:00",
+  "atualizado_em": "2026-10-26T14:51:48-03:00",
   "problemas": {
     "SAL-ORD-261012b65e4145|117294": {
       "vezes": 1,
@@ -3714,6 +3714,12 @@
       "ultima": "2026-10-26T14:34:11-03:00",
       "motivo": "Locator.click: Timeout 30000ms exceeded.\nCall log:\n  - waiting for locator(\".grid-row[data-idx]\").first.locator(\".btn-open-row\").first\n    - locator resolved to <div class=\"btn-open-row\">…</div>\n  - a",
       "avisado_em": "2026-10-26T12:22:51-03:00"
+    },
+    "SAL-ORD-2610165ab7dd4b|118168": {
+      "vezes": 1,
+      "ultima": "2026-10-26T14:51:48-03:00",
+      "motivo": "Depois de salvar o botão não virou Submit — veja debug/",
+      "avisado_em": "2026-10-26T14:51:48-03:00"
     }
   }
 }

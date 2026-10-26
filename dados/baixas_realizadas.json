@@ -3674,9 +3674,20 @@
       "arrangement": "FITLOG TRANSPORTES E LOGISTICA LTDA - 2026-10-13 08:27:43",
       "itens": 1,
       "task": "https://zecore.zebrands.mx/app/delivery-task/41d562731d"
+    },
+    "SAL-ORD-2610086b0e9fc6|119032": {
+      "data": "2026-10-26T16:53:51-03:00",
+      "sales_order": "SAL-ORD-2610086b0e9fc6",
+      "nf": "119032",
+      "carrier": "Fitlog",
+      "status_transportadora": "MERCADORIA ENTREGUE",
+      "master_guide": "35261042418313000104550010001190321754078942",
+      "arrangement": "FITLOG TRANSPORTES E LOGISTICA LTDA - 2026-10-23 08:05:39",
+      "itens": 2,
+      "task": "https://zecore.zebrands.mx/app/delivery-task/a518763c89"
     }
   },
-  "atualizado_em": "2026-10-26T16:41:39-03:00",
+  "atualizado_em": "2026-10-26T16:53:51-03:00",
   "problemas": {
     "SAL-ORD-260930b012a20e|116312": {
       "vezes": 2,
@@ -3731,6 +3742,12 @@
       "ultima": "2026-10-26T16:02:16-03:00",
       "motivo": "Confirmei o Submit mas não consegui verificar que foi aceito. Confira o documento antes de rodar de novo — veja debug/",
       "avisado_em": "2026-10-26T16:02:16-03:00"
+    },
+    "SAL-ORD-261001b9a3252a|117241": {
+      "vezes": 1,
+      "ultima": "2026-10-26T16:52:28-03:00",
+      "motivo": "Confirmei o Submit mas não consegui verificar que foi aceito. Confira o documento antes de rodar de novo — veja debug/",
+      "avisado_em": "2026-10-26T16:52:28-03:00"
     }
   }
 }

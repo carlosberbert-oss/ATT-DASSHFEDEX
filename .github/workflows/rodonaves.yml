@@ -18,7 +18,7 @@ jobs:
 
       - name: Instalar dependências
         run: |
-          pip install -r requirements.txt
+          pip install -r requirements.txt "openpyxl>=3.1"
           playwright install --with-deps chromium
           sudo apt-get install -y xvfb
 

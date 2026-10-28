@@ -3963,7 +3963,7 @@
       "task": "https://zecore.zebrands.mx/app/delivery-task/d5c23c73d0"
     }
   },
-  "atualizado_em": "2026-10-28T09:41:50-03:00",
+  "atualizado_em": "2026-10-28T09:51:57-03:00",
   "problemas": {
     "SAL-ORD-261016921f8449|118163": {
       "vezes": 1,
@@ -4014,8 +4014,8 @@
       "avisado_em": "2026-10-27T20:41:25-03:00"
     },
     "SAL-ORD-261007378ec9b7|118413": {
-      "vezes": 1,
-      "ultima": "2026-10-28T07:42:04-03:00",
+      "vezes": 2,
+      "ultima": "2026-10-28T09:51:57-03:00",
       "motivo": "Locator.click: Timeout 30000ms exceeded.\nCall log:\n  - waiting for locator(\".grid-row[data-idx]\").first.locator(\".btn-open-row\").first\n    - locator resolved to <div class=\"btn-open-row\">…</div>\n  - a",
       "avisado_em": "2026-10-28T07:42:04-03:00"
     },

@@ -69,7 +69,7 @@ COL_CARRIER       = 11   # K
 # Status da coluna B que contam como entregue. A comparação ignora
 # acento, maiúscula e hífen: "MERCADORIA PRÉ-ENTREGUE (MOBILE)" casa com
 # "PRE ENTREGUE". Pra acrescentar outro, é só incluir na lista.
-STATUS_ENTREGUE = ["MERCADORIA ENTREGUE", "PRE ENTREGUE"]
+STATUS_ENTREGUE = ["MERCADORIA ENTREGUE", "PRE ENTREGUE", "ENTREGA FINALIZADA"]   # a última é da Rodonaves
 
 
 def _norm_status(s):
@@ -83,7 +83,9 @@ def _status_conta_como_entregue(status):
     st = _norm_status(status)
     return any(_norm_status(alvo) in st for alvo in STATUS_ENTREGUE)
 STATUS_ZECORE_PENDENTE = "DELIVERED TO CARRIER"
-CARRIERS = ["FITLOG", "MIRA"]          # Jamef fica de fora (tem API)
+# Jamef fica de fora (tem API). Rodonaves SÓ pelo nome inteiro: "RTE"
+# casaria com "TRANSPORTES" e pegaria qualquer transportadora.
+CARRIERS = ["FITLOG", "MIRA", "RODONAVES"]
 
 LIMITE_PADRAO = 1                      # local começa conservador; no GitHub roda com --limite 0 (sem limite)
 
@@ -144,6 +146,8 @@ def _carrier_curto(texto):
         return "Fitlog"
     if "MIRA" in t:
         return "Mira"
+    if "RODONAVES" in t:
+        return "Rodonaves"
     return texto or "?"
 
 

@@ -1,0 +1,39 @@
+name: Baixar relatório Rodonaves
+
+on:
+  # Disparado por fora (cron-job.org), no mesmo esquema da Mira.
+  workflow_dispatch:
+
+jobs:
+  exportar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Instalar dependências
+        run: |
+          pip install -r requirements.txt
+          playwright install --with-deps chromium
+          sudo apt-get install -y xvfb
+
+      # Janela visível numa tela virtual (xvfb): o login do portal tem
+      # reCAPTCHA invisível, que desconfia mais de navegador "sem tela".
+      - name: Baixar relatório e atualizar planilha
+        env:
+          RTE_PORTAL_SENHA: ${{ secrets.RTE_PORTAL_SENHA }}
+          GOOGLE_CREDS_JSON: ${{ secrets.GOOGLE_CREDS_JSON }}
+        run: xvfb-run -a python scripts/rodonaves_export.py --headed
+
+      - name: Guardar evidências em caso de falha
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: debug-rodonaves-${{ github.run_number }}
+          path: debug/
+          retention-days: 14

@@ -4037,9 +4037,20 @@
       "arrangement": "FITLOG TRANSPORTES E LOGISTICA LTDA - 2026-10-26 08:16:21",
       "itens": 1,
       "task": "https://zecore.zebrands.mx/app/delivery-task/46e9d58e5d"
+    },
+    "SAL-ORD-261013cac99919|117639": {
+      "data": "2026-10-28T13:11:52-03:00",
+      "sales_order": "SAL-ORD-261013cac99919",
+      "nf": "117639",
+      "carrier": "Mira",
+      "status_transportadora": "MERCADORIA PRE-ENTREGUE (MOBILE)",
+      "master_guide": "35261042418313000104550010001176391976851308",
+      "arrangement": "Mira Transportes - 2026-10-14 08:14:33",
+      "itens": 1,
+      "task": "https://zecore.zebrands.mx/app/delivery-task/24838754d0"
     }
   },
-  "atualizado_em": "2026-10-28T12:21:59-03:00",
+  "atualizado_em": "2026-10-28T13:11:52-03:00",
   "problemas": {
     "SAL-ORD-261016921f8449|118163": {
       "vezes": 1,

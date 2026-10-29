@@ -4237,9 +4237,20 @@
       "nf": "117293",
       "carrier": "Fitlog",
       "origem": "ja_tinha_baixa"
+    },
+    "SAL-ORD-2610148b9713b8|117818": {
+      "data": "2026-10-29T14:11:28-03:00",
+      "sales_order": "SAL-ORD-2610148b9713b8",
+      "nf": "117818",
+      "carrier": "Mira",
+      "status_transportadora": "MERCADORIA ENTREGUE",
+      "master_guide": "35261042418313000104550010001178181987831908",
+      "arrangement": "Mira Transportes - 2026-10-14 11:21:24",
+      "itens": 1,
+      "task": "https://zecore.zebrands.mx/app/delivery-task/5bcfa88b6d"
     }
   },
-  "atualizado_em": "2026-10-29T13:21:54-03:00",
+  "atualizado_em": "2026-10-29T14:11:28-03:00",
   "problemas": {
     "SAL-ORD-2610145e82c56f|117828": {
       "vezes": 2,

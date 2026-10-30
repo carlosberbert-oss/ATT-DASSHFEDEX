@@ -4415,16 +4415,21 @@
       "nf": "119158",
       "carrier": "Fitlog",
       "origem": "ja_tinha_baixa"
+    },
+    "SAL-ORD-26102996df60b8|119643": {
+      "data": "2026-10-30T16:11:45-03:00",
+      "sales_order": "SAL-ORD-26102996df60b8",
+      "nf": "119643",
+      "carrier": "Rodonaves",
+      "status_transportadora": "ENTREGA FINALIZADA",
+      "master_guide": "35261042418313000104550010001196431273383329",
+      "arrangement": "RODONAVES - 2026-10-29 08:22:56",
+      "itens": 1,
+      "task": "https://zecore.zebrands.mx/app/delivery-task/f7965ba4c5"
     }
   },
-  "atualizado_em": "2026-10-30T15:12:34-03:00",
+  "atualizado_em": "2026-10-30T16:11:45-03:00",
   "problemas": {
-    "SAL-ORD-2610145e82c56f|117828": {
-      "vezes": 2,
-      "ultima": "2026-10-23T16:01:58-03:00",
-      "motivo": "Locator.click: Timeout 30000ms exceeded.\nCall log:\n  - waiting for locator(\".grid-row[data-idx]\").nth(2).locator(\".btn-open-row\").first\n    - locator resolved to <div class=\"btn-open-row\">…</div>\n  - ",
-      "avisado_em": "2026-10-23T13:53:53-03:00"
-    },
     "SAL-ORD-261011a4c39b88|117245": {
       "vezes": 22,
       "ultima": "2026-10-26T07:01:15-03:00",

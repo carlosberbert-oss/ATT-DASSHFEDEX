@@ -4392,7 +4392,7 @@
       "task": "https://zecore.zebrands.mx/app/delivery-task/c5d049c7e6"
     }
   },
-  "atualizado_em": "2026-10-30T12:32:25-03:00",
+  "atualizado_em": "2026-10-30T13:03:33-03:00",
   "problemas": {
     "SAL-ORD-2610145e82c56f|117828": {
       "vezes": 2,
@@ -4435,6 +4435,18 @@
       "ultima": "2026-10-30T09:51:59-03:00",
       "motivo": "Confirmei o Submit mas não consegui verificar que foi aceito. Confira o documento antes de rodar de novo — veja debug/",
       "avisado_em": "2026-10-30T09:51:59-03:00"
+    },
+    "SAL-ORD-261026d5879f4e|119419": {
+      "vezes": 1,
+      "ultima": "2026-10-30T13:02:12-03:00",
+      "motivo": "Locator.wait_for: Timeout 45000ms exceeded.\nCall log:\n  - waiting for locator(\"button[data-toggle='dropdown']:has-text('Create')\").first to be visible\n",
+      "avisado_em": "2026-10-30T13:02:12-03:00"
+    },
+    "SAL-ORD-2610200f442087|119158": {
+      "vezes": 1,
+      "ultima": "2026-10-30T13:03:33-03:00",
+      "motivo": "Page.goto: Timeout 45000ms exceeded.\nCall log:\n  - navigating to \"https://zecore.zebrands.mx/app/arrangement/FITLOG%20TRANSPORTES%20E%20LOGISTICA%20LTDA%20-%202026-10-26%2008%3A16%3A21\", waiting until",
+      "avisado_em": "2026-10-30T13:03:33-03:00"
     }
   }
 }

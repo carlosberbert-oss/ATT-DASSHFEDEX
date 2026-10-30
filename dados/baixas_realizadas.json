@@ -4390,9 +4390,34 @@
       "arrangement": "FITLOG TRANSPORTES E LOGISTICA LTDA - 2026-10-26 08:16:21",
       "itens": 1,
       "task": "https://zecore.zebrands.mx/app/delivery-task/c5d049c7e6"
+    },
+    "SAL-ORD-26102430fc32af|119163": {
+      "data": "2026-10-30T15:12:10-03:00",
+      "sales_order": "SAL-ORD-26102430fc32af",
+      "nf": "119163",
+      "carrier": "Fitlog",
+      "status_transportadora": "MERCADORIA ENTREGUE",
+      "master_guide": "35261042418313000104550010001191631013730539",
+      "arrangement": "FITLOG TRANSPORTES E LOGISTICA LTDA - 2026-10-26 08:16:21",
+      "itens": 1,
+      "task": "https://zecore.zebrands.mx/app/delivery-task/963c25e63d"
+    },
+    "SAL-ORD-261026d5879f4e|119419": {
+      "data": "2026-10-30T15:12:29-03:00",
+      "sales_order": "SAL-ORD-261026d5879f4e",
+      "nf": "119419",
+      "carrier": "Rodonaves",
+      "origem": "ja_tinha_baixa"
+    },
+    "SAL-ORD-2610200f442087|119158": {
+      "data": "2026-10-30T15:12:34-03:00",
+      "sales_order": "SAL-ORD-2610200f442087",
+      "nf": "119158",
+      "carrier": "Fitlog",
+      "origem": "ja_tinha_baixa"
     }
   },
-  "atualizado_em": "2026-10-30T14:51:37-03:00",
+  "atualizado_em": "2026-10-30T15:12:34-03:00",
   "problemas": {
     "SAL-ORD-2610145e82c56f|117828": {
       "vezes": 2,
@@ -4436,18 +4461,6 @@
       "motivo": "Confirmei o Submit mas não consegui verificar que foi aceito. Confira o documento antes de rodar de novo — veja debug/",
       "avisado_em": "2026-10-30T09:51:59-03:00"
     },
-    "SAL-ORD-261026d5879f4e|119419": {
-      "vezes": 1,
-      "ultima": "2026-10-30T13:02:12-03:00",
-      "motivo": "Locator.wait_for: Timeout 45000ms exceeded.\nCall log:\n  - waiting for locator(\"button[data-toggle='dropdown']:has-text('Create')\").first to be visible\n",
-      "avisado_em": "2026-10-30T13:02:12-03:00"
-    },
-    "SAL-ORD-2610200f442087|119158": {
-      "vezes": 1,
-      "ultima": "2026-10-30T13:03:33-03:00",
-      "motivo": "Page.goto: Timeout 45000ms exceeded.\nCall log:\n  - navigating to \"https://zecore.zebrands.mx/app/arrangement/FITLOG%20TRANSPORTES%20E%20LOGISTICA%20LTDA%20-%202026-10-26%2008%3A16%3A21\", waiting until",
-      "avisado_em": "2026-10-30T13:03:33-03:00"
-    },
     "SAL-ORD-261021e1ed1128|119642": {
       "vezes": 1,
       "ultima": "2026-10-30T14:21:34-03:00",
@@ -4459,6 +4472,12 @@
       "ultima": "2026-10-30T14:51:37-03:00",
       "motivo": "Depois de salvar o botão não virou Submit — veja debug/",
       "avisado_em": "2026-10-30T14:51:37-03:00"
+    },
+    "SAL-ORD-26102269d0b0d5|119039": {
+      "vezes": 1,
+      "ultima": "2026-10-30T15:11:33-03:00",
+      "motivo": "Depois de salvar o botão não virou Submit — veja debug/",
+      "avisado_em": "2026-10-30T15:11:33-03:00"
     }
   }
 }

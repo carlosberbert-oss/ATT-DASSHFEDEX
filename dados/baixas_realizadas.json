@@ -4392,7 +4392,7 @@
       "task": "https://zecore.zebrands.mx/app/delivery-task/c5d049c7e6"
     }
   },
-  "atualizado_em": "2026-10-30T14:21:34-03:00",
+  "atualizado_em": "2026-10-30T14:51:37-03:00",
   "problemas": {
     "SAL-ORD-2610145e82c56f|117828": {
       "vezes": 2,
@@ -4453,6 +4453,12 @@
       "ultima": "2026-10-30T14:21:34-03:00",
       "motivo": "Depois de salvar o botão não virou Submit — veja debug/",
       "avisado_em": "2026-10-30T14:21:34-03:00"
+    },
+    "SAL-ORD-26101728437da8|118209": {
+      "vezes": 1,
+      "ultima": "2026-10-30T14:51:37-03:00",
+      "motivo": "Depois de salvar o botão não virou Submit — veja debug/",
+      "avisado_em": "2026-10-30T14:51:37-03:00"
     }
   }
 }

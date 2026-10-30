@@ -75,7 +75,7 @@ SSW_URL = "https://ssw.inf.br/2/resultSSW"
 SSW_SENHAS = {"FITLOG": "0104", "Mira": ""}
 
 # Transportadoras aceitas (as do filtro "Carrier" do QuickSight)
-TRANSPORTADORAS = {"JAMEF", "FITLOG", "Mira", "INHOUSE"}
+TRANSPORTADORAS = {"JAMEF", "FITLOG", "Mira", "INHOUSE", "RODONAVES"}   # Rodonaves (RTE) desde 27/10/2026
 
 TIMEOUT_DOWNLOAD_MS = 300_000
 TIMEOUT_PADRAO_MS = 60_000
@@ -303,6 +303,16 @@ def conferir_filtros(page, qs):
             if sobram and regra["exato"]:
                 detalhe.append("sobram " + ", ".join(sorted(sobram)))
             problemas.append(f"{nome} ({'; '.join(detalhe)})")
+    # Rodonaves: não trava o robô, mas avisa — sem ela marcada no filtro Carrier
+    # do QuickSight, os pedidos da RTE não vêm no export e não entram na BASE
+    try:
+        el = page.locator("[data-automation-id='sheet_control_value'][data-automation-context='Carrier']").first
+        txt_car = sem_acento(el.inner_text(timeout=5000) or "")
+        if "RODONAVES" not in txt_car and "RTE" not in txt_car:
+            log("  ⚠ a Rodonaves NÃO está marcada no filtro Carrier do QuickSight — os pedidos dela ficam de fora. "
+                "Marque-a no QuickSight logado com o usuário do robô.")
+    except Exception:
+        pass
     if problemas:
         qs.salvar_debug(page, "filtros_diferentes")
         raise RuntimeError("Filtros do QuickSight diferentes do esperado: " + " | ".join(problemas) +
@@ -488,6 +498,8 @@ def data_iso(v):
 
 def transportadora(arrangement):
     a = sem_acento(arrangement)
+    if "RODONAVES" in a or a.startswith("RTE"):
+        return "RODONAVES"
     if a.startswith("JAMEF"):
         return "JAMEF"
     if a.startswith("FITLOG"):
@@ -1188,7 +1200,8 @@ def gravar_base(linhas, sheet_id, gc, simular=False):
 def _carrier_base(v):
     t = sem_acento(v)
     return "JAMEF" if t.startswith("JAMEF") else "FITLOG" if t.startswith("FITLOG") else \
-           "Mira" if t.startswith("MIRA") else "INHOUSE" if t.startswith("INHOUSE") else ""
+           "Mira" if t.startswith("MIRA") else "INHOUSE" if t.startswith("INHOUSE") else \
+           "RODONAVES" if ("RODONAVES" in t or t.startswith("RTE")) else ""
 
 
 def completar_valores(gc, zc, sheet_id, desde, ate, tempo_max_min, simular=False):

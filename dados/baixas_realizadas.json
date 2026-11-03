@@ -4586,9 +4586,16 @@
       "arrangement": "RODONAVES - 2026-10-28 07:51:48",
       "itens": 1,
       "task": "https://zecore.zebrands.mx/app/delivery-task/4ac35b86da"
+    },
+    "SAL-ORD-261005f7b4bfd9|118392": {
+      "data": "2026-11-03T11:10:56-03:00",
+      "sales_order": "SAL-ORD-261005f7b4bfd9",
+      "nf": "118392",
+      "carrier": "Fitlog",
+      "origem": "ja_tinha_baixa"
     }
   },
-  "atualizado_em": "2026-11-03T10:41:33-03:00",
+  "atualizado_em": "2026-11-03T11:10:56-03:00",
   "problemas": {
     "SAL-ORD-2610109c6101ec|118396": {
       "vezes": 1,
@@ -4601,12 +4608,6 @@
       "ultima": "2026-10-30T09:51:59-03:00",
       "motivo": "Confirmei o Submit mas não consegui verificar que foi aceito. Confira o documento antes de rodar de novo — veja debug/",
       "avisado_em": "2026-10-30T09:51:59-03:00"
-    },
-    "SAL-ORD-261005f7b4bfd9|118392": {
-      "vezes": 1,
-      "ultima": "2026-11-03T09:01:40-03:00",
-      "motivo": "Locator.click: Timeout 30000ms exceeded.\nCall log:\n  - waiting for locator(\".grid-row[data-idx]\").first.locator(\".btn-open-row\").first\n    - locator resolved to <div class=\"btn-open-row\">…</div>\n  - a",
-      "avisado_em": "2026-11-03T09:01:40-03:00"
     }
   }
 }

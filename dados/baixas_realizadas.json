@@ -4537,32 +4537,8 @@
       "task": "https://zecore.zebrands.mx/app/delivery-task/90f62213fc"
     }
   },
-  "atualizado_em": "2026-10-30T19:21:58-03:00",
+  "atualizado_em": "2026-11-03T08:02:02-03:00",
   "problemas": {
-    "SAL-ORD-261011a4c39b88|117245": {
-      "vezes": 22,
-      "ultima": "2026-10-26T07:01:15-03:00",
-      "motivo": "nenhum item pendente da NF 117245 neste pedido",
-      "avisado_em": "2026-10-25T11:31:25-03:00"
-    },
-    "SAL-ORD-26101120eb4f77|117532": {
-      "vezes": 1,
-      "ultima": "2026-10-26T08:33:01-03:00",
-      "motivo": "Locator.click: Timeout 30000ms exceeded.\nCall log:\n  - waiting for locator(\".grid-row[data-idx]\").first.locator(\".btn-open-row\").first\n    - locator resolved to <div class=\"btn-open-row\">…</div>\n  - a",
-      "avisado_em": "2026-10-26T08:33:01-03:00"
-    },
-    "SAL-ORD-26101349f61423|118400": {
-      "vezes": 3,
-      "ultima": "2026-10-26T16:41:39-03:00",
-      "motivo": "Locator.click: Timeout 30000ms exceeded.\nCall log:\n  - waiting for locator(\".grid-row[data-idx]\").first.locator(\".btn-open-row\").first\n    - locator resolved to <div class=\"btn-open-row\">…</div>\n  - a",
-      "avisado_em": "2026-10-26T12:22:51-03:00"
-    },
-    "SAL-ORD-261001b9a3252a|117241": {
-      "vezes": 1,
-      "ultima": "2026-10-26T16:52:28-03:00",
-      "motivo": "Confirmei o Submit mas não consegui verificar que foi aceito. Confira o documento antes de rodar de novo — veja debug/",
-      "avisado_em": "2026-10-26T16:52:28-03:00"
-    },
     "SAL-ORD-2610109c6101ec|118396": {
       "vezes": 1,
       "ultima": "2026-10-29T16:11:32-03:00",
@@ -4574,6 +4550,12 @@
       "ultima": "2026-10-30T09:51:59-03:00",
       "motivo": "Confirmei o Submit mas não consegui verificar que foi aceito. Confira o documento antes de rodar de novo — veja debug/",
       "avisado_em": "2026-10-30T09:51:59-03:00"
+    },
+    "SAL-ORD-26102466a687a0|119165": {
+      "vezes": 1,
+      "ultima": "2026-11-03T08:02:02-03:00",
+      "motivo": "Confirmei o Submit mas não consegui verificar que foi aceito. Confira o documento antes de rodar de novo — veja debug/",
+      "avisado_em": "2026-11-03T08:02:02-03:00"
     }
   }
 }

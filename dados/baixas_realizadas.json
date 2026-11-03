@@ -4575,9 +4575,20 @@
       "nf": "119165",
       "carrier": "Fitlog",
       "origem": "ja_tinha_baixa"
+    },
+    "SAL-ORD-261027fcb5e45d|119498": {
+      "data": "2026-11-03T10:41:33-03:00",
+      "sales_order": "SAL-ORD-261027fcb5e45d",
+      "nf": "119498",
+      "carrier": "Rodonaves",
+      "status_transportadora": "ENTREGA FINALIZADA",
+      "master_guide": "35261042418313000104550010001194981184897251",
+      "arrangement": "RODONAVES - 2026-10-28 07:51:48",
+      "itens": 1,
+      "task": "https://zecore.zebrands.mx/app/delivery-task/4ac35b86da"
     }
   },
-  "atualizado_em": "2026-11-03T10:11:16-03:00",
+  "atualizado_em": "2026-11-03T10:41:33-03:00",
   "problemas": {
     "SAL-ORD-2610109c6101ec|118396": {
       "vezes": 1,

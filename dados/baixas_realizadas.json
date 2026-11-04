@@ -4742,9 +4742,20 @@
       "arrangement": "RODONAVES - 2026-10-30 08:11:29",
       "itens": 1,
       "task": "https://zecore.zebrands.mx/app/delivery-task/aa465afc92"
+    },
+    "SAL-ORD-2610230b4d8516|119174": {
+      "data": "2026-11-04T07:41:32-03:00",
+      "sales_order": "SAL-ORD-2610230b4d8516",
+      "nf": "119174",
+      "carrier": "Fitlog",
+      "status_transportadora": "MERCADORIA ENTREGUE",
+      "master_guide": "35261042418313000104550010001191741013790578",
+      "arrangement": "FITLOG TRANSPORTES E LOGISTICA LTDA - 2026-10-26 08:16:21",
+      "itens": 3,
+      "task": "https://zecore.zebrands.mx/app/delivery-task/58bc213b9d"
     }
   },
-  "atualizado_em": "2026-11-04T07:01:43-03:00",
+  "atualizado_em": "2026-11-04T07:41:32-03:00",
   "problemas": {
     "SAL-ORD-2610109c6101ec|118396": {
       "vezes": 1,

@@ -5086,9 +5086,86 @@
       "arrangement": "RODONAVES - 2026-11-03 08:11:59",
       "itens": 1,
       "task": "https://zecore.zebrands.mx/app/delivery-task/81bc3291b8"
+    },
+    "SAL-ORD-2610312870e01a|119844": {
+      "data": "2026-11-05T14:22:57-03:00",
+      "sales_order": "SAL-ORD-2610312870e01a",
+      "nf": "119844",
+      "carrier": "Rodonaves",
+      "status_transportadora": "ENTREGA FINALIZADA",
+      "master_guide": "35261142418313000104550010001198441704695440",
+      "arrangement": "RODONAVES - 2026-11-03 08:11:59",
+      "itens": 4,
+      "task": "https://zecore.zebrands.mx/app/delivery-task/0e7354133e"
+    },
+    "SAL-ORD-261031a1c3867d|119876": {
+      "data": "2026-11-05T14:23:33-03:00",
+      "sales_order": "SAL-ORD-261031a1c3867d",
+      "nf": "119876",
+      "carrier": "Rodonaves",
+      "status_transportadora": "ENTREGA FINALIZADA",
+      "master_guide": "35261142418313000104550010001198761704789316",
+      "arrangement": "RODONAVES - 2026-11-03 08:11:59",
+      "itens": 1,
+      "task": "https://zecore.zebrands.mx/app/delivery-task/810f56ccf2"
+    },
+    "SAL-ORD-26103070ec8499|119885": {
+      "data": "2026-11-05T14:24:10-03:00",
+      "sales_order": "SAL-ORD-26103070ec8499",
+      "nf": "119885",
+      "carrier": "Rodonaves",
+      "status_transportadora": "ENTREGA FINALIZADA",
+      "master_guide": "35261142418313000104550010001198851704815219",
+      "arrangement": "RODONAVES - 2026-11-03 08:11:59",
+      "itens": 1,
+      "task": "https://zecore.zebrands.mx/app/delivery-task/118809ae84"
+    },
+    "SAL-ORD-26110284e61eb0|119909": {
+      "data": "2026-11-05T14:24:48-03:00",
+      "sales_order": "SAL-ORD-26110284e61eb0",
+      "nf": "119909",
+      "carrier": "Rodonaves",
+      "status_transportadora": "ENTREGA FINALIZADA",
+      "master_guide": "35261142418313000104550010001199091704881878",
+      "arrangement": "RODONAVES - 2026-11-03 08:11:59",
+      "itens": 1,
+      "task": "https://zecore.zebrands.mx/app/delivery-task/5b9a76072c"
+    },
+    "SAL-ORD-2610259256b0f9|119847": {
+      "data": "2026-11-05T14:25:25-03:00",
+      "sales_order": "SAL-ORD-2610259256b0f9",
+      "nf": "119847",
+      "carrier": "Rodonaves",
+      "status_transportadora": "ENTREGA FINALIZADA",
+      "master_guide": "35261142418313000104550010001198471704705617",
+      "arrangement": "RODONAVES - 2026-11-03 08:11:59",
+      "itens": 1,
+      "task": "https://zecore.zebrands.mx/app/delivery-task/c5a1303e66"
+    },
+    "SAL-ORD-2610308d389ab7|119860": {
+      "data": "2026-11-05T14:26:01-03:00",
+      "sales_order": "SAL-ORD-2610308d389ab7",
+      "nf": "119860",
+      "carrier": "Rodonaves",
+      "status_transportadora": "ENTREGA FINALIZADA",
+      "master_guide": "35261142418313000104550010001198601704750991",
+      "arrangement": "RODONAVES - 2026-11-03 08:11:59",
+      "itens": 1,
+      "task": "https://zecore.zebrands.mx/app/delivery-task/ad4830f4d0"
+    },
+    "SAL-ORD-261101deb5dfca|119853": {
+      "data": "2026-11-05T14:26:38-03:00",
+      "sales_order": "SAL-ORD-261101deb5dfca",
+      "nf": "119853",
+      "carrier": "Rodonaves",
+      "status_transportadora": "ENTREGA FINALIZADA",
+      "master_guide": "35261142418313000104550010001198531704720753",
+      "arrangement": "RODONAVES - 2026-11-03 08:11:59",
+      "itens": 3,
+      "task": "https://zecore.zebrands.mx/app/delivery-task/4bfdcb2a68"
     }
   },
-  "atualizado_em": "2026-11-05T11:47:34-03:00",
+  "atualizado_em": "2026-11-05T14:26:38-03:00",
   "problemas": {
     "SAL-ORD-2610109c6101ec|118396": {
       "vezes": 1,
@@ -5113,6 +5190,12 @@
       "ultima": "2026-11-05T11:43:31-03:00",
       "motivo": "Confirmei o Submit mas não consegui verificar que foi aceito. Confira o documento antes de rodar de novo — veja debug/",
       "avisado_em": "2026-11-05T11:43:31-03:00"
+    },
+    "SAL-ORD-2611022f0c332b|119900": {
+      "vezes": 1,
+      "ultima": "2026-11-05T14:22:05-03:00",
+      "motivo": "Confirmei o Submit mas não consegui verificar que foi aceito. Confira o documento antes de rodar de novo — veja debug/",
+      "avisado_em": "2026-11-05T14:22:05-03:00"
     }
   }
 }

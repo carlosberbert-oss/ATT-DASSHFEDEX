@@ -5316,9 +5316,42 @@
       "nf": "119900",
       "carrier": "Rodonaves",
       "origem": "ja_tinha_baixa"
+    },
+    "SAL-ORD-261024dca0a516|119170": {
+      "data": "2026-11-05T17:21:42-03:00",
+      "sales_order": "SAL-ORD-261024dca0a516",
+      "nf": "119170",
+      "carrier": "Fitlog",
+      "status_transportadora": "MERCADORIA ENTREGUE",
+      "master_guide": "35261042418313000104550010001191701013770837",
+      "arrangement": "FITLOG TRANSPORTES E LOGISTICA LTDA - 2026-10-26 08:16:21",
+      "itens": 1,
+      "task": "https://zecore.zebrands.mx/app/delivery-task/ca6e3208bd"
+    },
+    "SAL-ORD-261101add2ef7c|119905": {
+      "data": "2026-11-05T17:22:19-03:00",
+      "sales_order": "SAL-ORD-261101add2ef7c",
+      "nf": "119905",
+      "carrier": "Rodonaves",
+      "status_transportadora": "ENTREGA FINALIZADA",
+      "master_guide": "35261142418313000104550010001199051704871180",
+      "arrangement": "RODONAVES - 2026-11-03 08:11:59",
+      "itens": 1,
+      "task": "https://zecore.zebrands.mx/app/delivery-task/1901b9c4f6"
+    },
+    "SAL-ORD-261103928bf6b9|120297": {
+      "data": "2026-11-05T17:22:58-03:00",
+      "sales_order": "SAL-ORD-261103928bf6b9",
+      "nf": "120297",
+      "carrier": "Rodonaves",
+      "status_transportadora": "ENTREGA FINALIZADA",
+      "master_guide": "35261142418313000104550010001202971796440730",
+      "arrangement": "RODONAVES - 2026-11-04 08:16:06",
+      "itens": 1,
+      "task": "https://zecore.zebrands.mx/app/delivery-task/8017507341"
     }
   },
-  "atualizado_em": "2026-11-05T16:40:52-03:00",
+  "atualizado_em": "2026-11-05T17:22:58-03:00",
   "problemas": {
     "SAL-ORD-2610112f78e34c|118543": {
       "vezes": 1,

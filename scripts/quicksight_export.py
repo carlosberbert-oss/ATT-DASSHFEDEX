@@ -165,51 +165,69 @@ _X_FECHAR = "M18 6L6 18M6 6L18 18"
 
 
 def _painel_assistente_aberto(page):
-    painel = page.locator("[data-testid^='chat-experience']")
-    try:
-        return painel.count() > 0 and painel.first.is_visible(timeout=800)
-    except Exception:
-        return False
+    """O painel tem textos que só existem nele. Não dá pra confiar no
+    data-testid "chat-experience-…": é um espaçador de altura zero, que
+    conta como invisível mesmo com o painel aberto."""
+    sinais = [
+        page.get_by_text("My Assistant", exact=False),
+        page.get_by_placeholder("Faça uma pergunta", exact=False),
+        page.get_by_placeholder("Ask a question", exact=False),
+        page.get_by_text("Vamos resolver algo juntos", exact=False),
+        page.get_by_text("O que vamos explorar", exact=False),
+        page.get_by_text("Resuma o que mudou", exact=False),
+    ]
+    for s in sinais:
+        try:
+            for i in range(min(s.count(), 3)):
+                if s.nth(i).is_visible(timeout=300):
+                    return True
+        except Exception:
+            continue
+    return False
 
 
 def fechar_painel_assistente(page):
-    """Fecha o painel do assistente de IA ("O que vamos explorar?").
+    """Fecha o painel do assistente de IA ("Vamos resolver algo juntos").
 
     Em nov/2026 o QuickSight passou a abrir esse painel no lado direito
-    do dashboard, e ele fica por cima do menu de exportar do visual —
-    o clique cai no painel em vez do botão. Fecha pelo X do canto
-    superior direito. Como o mesmo desenho de X aparece em outros pontos
-    da tela (filtros, avisos), só clica nos que estão no topo, à direita.
+    do dashboard, e ele fica por cima do menu de exportar do visual — o
+    clique cai no painel em vez do botão. Fecha pelo X do canto superior
+    direito. Como o mesmo desenho de X aparece em outros pontos da tela
+    (filtros, avisos), só clica nos que estão no topo, à direita.
     """
     if not _painel_assistente_aberto(page):
         return False
+    log("Painel do assistente de IA aberto — fechando")
 
     largura = (page.viewport_size or {}).get("width", 1600)
     candidatos = page.locator(f"svg:has(path[d='{_X_FECHAR}'])")
+    total = candidatos.count()
     alvos = []
-    for i in range(min(candidatos.count(), 15)):
+    for i in range(min(total, 20)):
         el = candidatos.nth(i)
         try:
             caixa = el.bounding_box()
-            if caixa and caixa["x"] > largura * 0.65 and caixa["y"] < 150:
-                alvos.append((caixa["y"], -caixa["x"], el))   # mais alto e mais à direita primeiro
+            if caixa and caixa["width"] > 0 and caixa["x"] > largura * 0.65 and caixa["y"] < 150:
+                alvos.append((caixa["y"], -caixa["x"], el, caixa))
         except Exception:
             continue
+    log(f"  X encontrados na tela: {total} | no canto superior direito: {len(alvos)}")
 
-    for _, _, el in sorted(alvos, key=lambda t: (t[0], t[1])):
-        try:
-            # Clica no botão que envolve o ícone, se houver; senão no próprio ícone
-            botao = el.locator("xpath=ancestor::*[self::button or @role='button'][1]")
-            (botao.first if botao.count() > 0 else el).click(timeout=3000)
-            page.wait_for_timeout(1500)
-            if not _painel_assistente_aberto(page):
-                log("Painel do assistente de IA fechado")
-                return True
-        except Exception:
-            continue
+    for _, _, el, caixa in sorted(alvos, key=lambda t: (t[0], t[1])):
+        botao = el.locator("xpath=ancestor::*[self::button or @role='button'][1]")
+        alvo = botao.first if botao.count() > 0 else el
+        for forcar in (False, True):        # 2ª tentativa ignora o que estiver por cima
+            try:
+                alvo.click(timeout=3000, force=forcar)
+                page.wait_for_timeout(1500)
+                if not _painel_assistente_aberto(page):
+                    log(f"Painel do assistente de IA fechado (X em x={caixa['x']:.0f}, y={caixa['y']:.0f})")
+                    return True
+            except Exception as e:
+                log(f"  clique no X em x={caixa['x']:.0f} falhou: {str(e)[:80]}")
 
     salvar_debug(page, "painel_assistente_aberto")
-    log("Não consegui fechar o painel do assistente — seguindo mesmo assim")
+    log("Não consegui fechar o painel do assistente — seguindo mesmo assim (veja debug/)")
     return False
 
 

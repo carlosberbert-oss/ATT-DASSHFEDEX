@@ -5013,9 +5013,16 @@
       "arrangement": "RODONAVES - 2026-11-03 08:11:59",
       "itens": 1,
       "task": "https://zecore.zebrands.mx/app/delivery-task/cf7739dbad"
+    },
+    "SAL-ORD-26103016558a7e|119794": {
+      "data": "2026-11-04T21:34:05-03:00",
+      "sales_order": "SAL-ORD-26103016558a7e",
+      "nf": "119794",
+      "carrier": "Fitlog",
+      "origem": "ja_tinha_baixa"
     }
   },
-  "atualizado_em": "2026-11-04T20:01:39-03:00",
+  "atualizado_em": "2026-11-04T21:34:05-03:00",
   "problemas": {
     "SAL-ORD-2610109c6101ec|118396": {
       "vezes": 1,
@@ -5034,12 +5041,6 @@
       "ultima": "2026-11-04T11:41:58-03:00",
       "motivo": "Confirmei o Submit mas não consegui verificar que foi aceito. Confira o documento antes de rodar de novo — veja debug/",
       "avisado_em": "2026-11-04T11:41:58-03:00"
-    },
-    "SAL-ORD-26103016558a7e|119794": {
-      "vezes": 1,
-      "ultima": "2026-11-04T18:51:56-03:00",
-      "motivo": "Confirmei o Submit mas não consegui verificar que foi aceito. Confira o documento antes de rodar de novo — veja debug/",
-      "avisado_em": "2026-11-04T18:51:56-03:00"
     }
   }
 }

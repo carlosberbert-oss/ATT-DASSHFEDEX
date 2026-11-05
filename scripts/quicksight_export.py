@@ -17,6 +17,12 @@ Variáveis de ambiente necessárias:
   QS_PASSWORD       senha
   GOOGLE_CREDS_JSON conteúdo do JSON da service account do Google
   SHEET_ID          id da planilha (opcional, tem default)
+  APPS_SCRIPT_URL   URL do Web App do Apps Script (opcional)
+  APPS_SCRIPT_TOKEN token do Web App (opcional)
+
+Se APPS_SCRIPT_URL e APPS_SCRIPT_TOKEN estiverem definidos, a planilha
+reimporta a aba Rastreamento na hora. Sem eles, isso acontece na
+verificação automática do Apps Script (a cada 10 min).
 
 Rodar local:
   pip install -r requirements.txt
@@ -154,6 +160,59 @@ def fechar_popups(page):
     return False
 
 
+# Ícone "X" (o desenho do SVG) que fecha o painel do assistente de IA
+_X_FECHAR = "M18 6L6 18M6 6L18 18"
+
+
+def _painel_assistente_aberto(page):
+    painel = page.locator("[data-testid^='chat-experience']")
+    try:
+        return painel.count() > 0 and painel.first.is_visible(timeout=800)
+    except Exception:
+        return False
+
+
+def fechar_painel_assistente(page):
+    """Fecha o painel do assistente de IA ("O que vamos explorar?").
+
+    Em nov/2026 o QuickSight passou a abrir esse painel no lado direito
+    do dashboard, e ele fica por cima do menu de exportar do visual —
+    o clique cai no painel em vez do botão. Fecha pelo X do canto
+    superior direito. Como o mesmo desenho de X aparece em outros pontos
+    da tela (filtros, avisos), só clica nos que estão no topo, à direita.
+    """
+    if not _painel_assistente_aberto(page):
+        return False
+
+    largura = (page.viewport_size or {}).get("width", 1600)
+    candidatos = page.locator(f"svg:has(path[d='{_X_FECHAR}'])")
+    alvos = []
+    for i in range(min(candidatos.count(), 15)):
+        el = candidatos.nth(i)
+        try:
+            caixa = el.bounding_box()
+            if caixa and caixa["x"] > largura * 0.65 and caixa["y"] < 150:
+                alvos.append((caixa["y"], -caixa["x"], el))   # mais alto e mais à direita primeiro
+        except Exception:
+            continue
+
+    for _, _, el in sorted(alvos, key=lambda t: (t[0], t[1])):
+        try:
+            # Clica no botão que envolve o ícone, se houver; senão no próprio ícone
+            botao = el.locator("xpath=ancestor::*[self::button or @role='button'][1]")
+            (botao.first if botao.count() > 0 else el).click(timeout=3000)
+            page.wait_for_timeout(1500)
+            if not _painel_assistente_aberto(page):
+                log("Painel do assistente de IA fechado")
+                return True
+        except Exception:
+            continue
+
+    salvar_debug(page, "painel_assistente_aberto")
+    log("Não consegui fechar o painel do assistente — seguindo mesmo assim")
+    return False
+
+
 def garantir_aba_correta(page):
     """O link do dashboard já abre na aba 3PL In Transit. Só clica se,
     por algum motivo, outra aba estiver selecionada — clicar numa aba
@@ -193,6 +252,7 @@ def abrir_dashboard(page, conta):
         log("networkidle não chegou, seguindo mesmo assim")
 
     fechar_popups(page)   # às vezes aparece de novo depois do carregamento
+    fechar_painel_assistente(page)
     log("Dashboard carregado")
 
 
@@ -332,6 +392,7 @@ def clicar_exportar_csv(page):
 
 def exportar_csv(page):
     fechar_popups(page)
+    fechar_painel_assistente(page)   # fica por cima do menu de exportar
     titulo = localizar_visual(page)
 
     if not abrir_menu_visual(page, titulo):
@@ -399,6 +460,52 @@ def escrever_no_sheets(caminho_csv, sheet_id, creds_json):
     return len(linhas)
 
 
+# ── Etapa 5: avisar a planilha ──────────────────────────────────
+
+def avisar_planilha(url, token):
+    """Chama o Web App do Apps Script pra disparar a reimportação na hora.
+
+    Sem isso a planilha só perceberia a mudança na verificação seguinte
+    (a cada 10 min). O gatilho de verificação continua existindo como
+    rede de segurança, caso este aviso falhe.
+    """
+    import urllib.request
+
+    log("Avisando a planilha que a base foi atualizada")
+
+    dados = json.dumps({"token": token}).encode("utf-8")
+    req = urllib.request.Request(
+        url, data=dados,
+        headers={"Content-Type": "application/json"},
+        method="POST",
+    )
+
+    try:
+        with urllib.request.urlopen(req, timeout=600) as resp:
+            corpo = resp.read().decode("utf-8")
+
+        try:
+            r = json.loads(corpo)
+        except json.JSONDecodeError:
+            log(f"Resposta inesperada da planilha: {corpo[:200]}")
+            return False
+
+        if r.get("erro"):
+            log(f"A planilha respondeu com erro: {r['erro']}")
+            return False
+
+        log(f"Rastreamento reimportado — {r.get('novos', '?')} NF(s) nova(s), "
+            f"{r.get('atualizados', '?')} cruzada(s)")
+        return True
+
+    except Exception as e:
+        # Não derruba a execução: o CSV já está na planilha, e a
+        # verificação periódica do Apps Script pega isso em até 10 min
+        log(f"Não consegui avisar a planilha ({e}). "
+            "A reimportação vai acontecer na verificação automática.")
+        return False
+
+
 # ── Principal ───────────────────────────────────────────────────
 
 def main():
@@ -414,6 +521,8 @@ def main():
     senha = os.environ.get("QS_PASSWORD")
     sheet_id = os.environ.get("SHEET_ID", SHEET_ID_PADRAO)
     creds_json = os.environ.get("GOOGLE_CREDS_JSON")
+    webapp_url = os.environ.get("APPS_SCRIPT_URL")
+    webapp_token = os.environ.get("APPS_SCRIPT_TOKEN")
 
     if not usuario or not senha:
         sys.exit("Faltam as variáveis QS_USER e QS_PASSWORD")
@@ -441,7 +550,15 @@ def main():
                 log("Modo --so-baixar: não escrevi no Sheets")
             else:
                 total = escrever_no_sheets(caminho, sheet_id, creds_json)
-                log(f"Concluído — {total} linha(s) na planilha")
+                log(f"Base de dados atualizada — {total} linha(s)")
+
+                if webapp_url and webapp_token:
+                    avisar_planilha(webapp_url, webapp_token)
+                else:
+                    log("APPS_SCRIPT_URL/TOKEN não configurados — a planilha "
+                        "vai reimportar sozinha na verificação automática")
+
+                log("Concluído")
 
         except PWTimeout as e:
             salvar_debug(page, "timeout")

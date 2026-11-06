@@ -5810,9 +5810,31 @@
       "arrangement": "RODONAVES - 2026-11-03 11:46:16",
       "itens": 1,
       "task": "https://zecore.zebrands.mx/app/delivery-task/b0273980ed"
+    },
+    "SAL-ORD-2610319c7bf23e|119883": {
+      "data": "2026-11-06T17:02:11-03:00",
+      "sales_order": "SAL-ORD-2610319c7bf23e",
+      "nf": "119883",
+      "carrier": "Rodonaves",
+      "status_transportadora": "ENTREGA FINALIZADA",
+      "master_guide": "35261142418313000104550010001198831704811537",
+      "arrangement": "RODONAVES - 2026-11-03 08:11:59",
+      "itens": 1,
+      "task": "https://zecore.zebrands.mx/app/delivery-task/3d073c39bb"
+    },
+    "SAL-ORD-261030b43aa9c9|119795": {
+      "data": "2026-11-06T17:02:49-03:00",
+      "sales_order": "SAL-ORD-261030b43aa9c9",
+      "nf": "119795",
+      "carrier": "Fitlog",
+      "status_transportadora": "MERCADORIA ENTREGUE",
+      "master_guide": "35261042418313000104550010001197951371198749",
+      "arrangement": "FITLOG TRANSPORTES E LOGISTICA LTDA - 2026-10-30 11:36:41",
+      "itens": 5,
+      "task": "https://zecore.zebrands.mx/app/delivery-task/eb81e76ae3"
     }
   },
-  "atualizado_em": "2026-11-06T16:31:51-03:00",
+  "atualizado_em": "2026-11-06T17:02:50-03:00",
   "problemas": {
     "SAL-ORD-2610314b8f1999|119829": {
       "vezes": 1,

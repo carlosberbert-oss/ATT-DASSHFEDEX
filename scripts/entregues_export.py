@@ -141,10 +141,12 @@ def exportar_quicksight(dia, headed=False):
             page.goto(url, wait_until="domcontentloaded", timeout=TIMEOUT_PADRAO_MS)
             page.wait_for_timeout(8000)
             qs.fechar_popups(page)
+            qs.fechar_painel_assistente(page)   # painel de IA da AWS fica por cima do menu da tabela
             abrir_aba(page, qs)
             definir_data(page, dia, qs)
             log("Conferindo os demais filtros")
             conferir_filtros(page, qs)
+            qs.fechar_painel_assistente(page)   # pode reabrir depois de trocar a data
             return baixar_visual(page, qs)
         except PWTimeout as e:
             qs.salvar_debug(page, "entregues_timeout")
@@ -415,6 +417,7 @@ def baixar_visual(page, qs):
     nao_menu = ("maxim", "expand", "orden", "sort", "filtr", "foco", "focus", "favorit")
 
     def abrir_menu():
+        qs.fechar_painel_assistente(page)
         b = achar_bloco()
         if b is None:
             return None

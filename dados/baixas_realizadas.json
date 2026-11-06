@@ -5400,9 +5400,20 @@
       "nf": "119912",
       "carrier": "Rodonaves",
       "origem": "ja_tinha_baixa"
+    },
+    "SAL-ORD-26103007f982fd|119880": {
+      "data": "2026-11-05T21:21:39-03:00",
+      "sales_order": "SAL-ORD-26103007f982fd",
+      "nf": "119880",
+      "carrier": "Rodonaves",
+      "status_transportadora": "ENTREGA FINALIZADA",
+      "master_guide": "35261142418313000104550010001198801704805381",
+      "arrangement": "RODONAVES - 2026-11-03 08:11:59",
+      "itens": 1,
+      "task": "https://zecore.zebrands.mx/app/delivery-task/b0085ecf24"
     }
   },
-  "atualizado_em": "2026-11-05T20:41:07-03:00",
+  "atualizado_em": "2026-11-05T21:21:39-03:00",
   "problemas": {
     "SAL-ORD-2610112f78e34c|118543": {
       "vezes": 1,
